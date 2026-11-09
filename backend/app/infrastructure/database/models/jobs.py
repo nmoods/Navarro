@@ -5,10 +5,10 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Index, Integer, String, Text, Uuid
+from sqlalchemy import Boolean, Float, ForeignKey, Index, Integer, String, Text, Uuid
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.infrastructure.database.base import Base, JsonType, Timestamps, UUIDPrimaryKey, utcnow
+from app.infrastructure.database.base import Base, JsonType, Timestamps, UTCDateTime, UUIDPrimaryKey, utcnow
 
 
 class GenerationJob(UUIDPrimaryKey, Timestamps, Base):
@@ -33,11 +33,11 @@ class GenerationJob(UUIDPrimaryKey, Timestamps, Base):
     priority: Mapped[int] = mapped_column(Integer, default=100, nullable=False)
     cancel_requested: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     locked_by: Mapped[str | None] = mapped_column(String(80))
-    locked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    heartbeat_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    run_after: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
-    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    locked_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
+    heartbeat_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
+    run_after: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow, nullable=False)
+    started_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
+    finished_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
     timeout_seconds: Mapped[int] = mapped_column(Integer, default=3600, nullable=False)
 
     __table_args__ = (
@@ -58,6 +58,6 @@ class GenerationJobLog(UUIDPrimaryKey, Base):
     stage: Mapped[str] = mapped_column(String(30), nullable=False)
     message: Mapped[str] = mapped_column(Text, nullable=False)
     data: Mapped[dict] = mapped_column(JsonType, default=dict, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow, nullable=False)
 
     __table_args__ = (Index("ix_generation_job_logs_job_created", "job_id", "created_at"),)

@@ -5,10 +5,10 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import BigInteger, DateTime, Float, ForeignKey, Index, Integer, String, Uuid
+from sqlalchemy import BigInteger, Float, ForeignKey, Index, Integer, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.infrastructure.database.base import Base, JsonType, UUIDPrimaryKey, utcnow
+from app.infrastructure.database.base import Base, JsonType, UTCDateTime, UUIDPrimaryKey, utcnow
 
 
 class MediaAsset(UUIDPrimaryKey, Base):
@@ -26,7 +26,7 @@ class MediaAsset(UUIDPrimaryKey, Base):
     height: Mapped[int | None] = mapped_column(Integer)
     duration_seconds: Mapped[float | None] = mapped_column(Float)
     details: Mapped[dict] = mapped_column(JsonType, default=dict, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow, nullable=False)
 
     __table_args__ = (
         Index("ix_media_assets_user_kind_created", "user_id", "kind", "created_at"),
@@ -56,7 +56,7 @@ class VideoExport(UUIDPrimaryKey, Base):
     duration_seconds: Mapped[float] = mapped_column(Float, nullable=False)
     render_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     details: Mapped[dict] = mapped_column(JsonType, default=dict, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow, nullable=False)
 
     __table_args__ = (
         Index("ix_video_exports_project_created", "project_id", "created_at"),

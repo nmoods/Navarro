@@ -7,7 +7,6 @@ from datetime import datetime
 
 from sqlalchemy import (
     Boolean,
-    DateTime,
     Float,
     ForeignKey,
     Index,
@@ -19,7 +18,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.infrastructure.database.base import Base, JsonType, Timestamps, UUIDPrimaryKey, utcnow
+from app.infrastructure.database.base import Base, JsonType, Timestamps, UTCDateTime, UUIDPrimaryKey, utcnow
 
 
 class Project(UUIDPrimaryKey, Timestamps, Base):
@@ -90,7 +89,7 @@ class ScriptVersion(UUIDPrimaryKey, Base):
     full_text: Mapped[str] = mapped_column(Text, nullable=False)
     claims: Mapped[list] = mapped_column(JsonType, default=list, nullable=False)
     model: Mapped[str | None] = mapped_column(String(80))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow, nullable=False)
 
     __table_args__ = (UniqueConstraint("project_id", "version", name="uq_scripts_project_version"),)
 
@@ -105,7 +104,7 @@ class Storyboard(UUIDPrimaryKey, Base):
     version: Mapped[int] = mapped_column(Integer, nullable=False)
     is_current: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     analysis: Mapped[dict] = mapped_column(JsonType, default=dict, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow, nullable=False)
 
     scenes: Mapped[list[Scene]] = relationship(
         back_populates="storyboard", cascade="all, delete-orphan", order_by="Scene.position"
@@ -169,7 +168,7 @@ class SceneAsset(UUIDPrimaryKey, Base):
     provider: Mapped[str] = mapped_column(String(40), nullable=False)
     is_current: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     details: Mapped[dict] = mapped_column(JsonType, default=dict, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow, nullable=False)
 
     scene: Mapped[Scene] = relationship(back_populates="assets")
 
