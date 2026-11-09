@@ -1,0 +1,52 @@
+[project]
+name = "reelforge-backend"
+version = "0.1.0"
+description = "ReelForge AI backend: API, job worker, AI orchestration and render engine"
+requires-python = ">=3.13"
+dependencies = [
+    "alembic>=1.20.1",
+    "argon2-cffi>=25.1.0",
+    "fastapi[standard]>=0.162.2",
+    "httpx>=0.28.1",
+    "imageio-ffmpeg>=0.8.1",
+    "numpy>=2.5.4",
+    "opencv-python-headless>=5.0.0.93",
+    "pillow>=13.0.0",
+    "psycopg[binary]>=3.3.8",
+    "pydantic-settings>=2.16.2",
+    "pyjwt[crypto]>=2.15.1",
+    "python-multipart>=0.0.33",
+    "scipy>=1.18.1",
+    "soundfile>=0.14.0",
+    "sqlalchemy>=2.1.8",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+    "pytest-asyncio>=1.4.1.post1",
+    "ruff>=0.17.4",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+markers = [
+    "slow: renders real video frames (seconds)",
+    "integration: requires live local AI services (Ollama, ComfyUI, Kokoro, Whisper)",
+]
+addopts = "-m 'not integration'"
+
+[tool.ruff]
+line-length = 110
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S", "SIM"]
+ignore = ["S101", "B008"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S105", "S106", "S108", "S311"]
