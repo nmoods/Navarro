@@ -18,8 +18,8 @@ const VISUALS = [
   { still: "/demo/still-map.jpg", name: "Animated maps", body: "Places are geocoded offline and journeys draw themselves across the region." },
   { still: "/demo/still-timeline.jpg", name: "Timelines", body: "Dates from the narration become a chronology the camera travels along." },
   { still: "/demo/still-parallax.jpg", name: "2.5D parallax", body: "Stills are split into depth layers so landscapes move like a camera dolly." },
-  { still: "/demo/still-newspaper.jpg", name: "Archival front pages", body: "Reported events become a period newspaper with halftone photography." },
-  { still: "/demo/still-infographic.jpg", name: "Infographics", body: "Numbers in the script count up as animated bars and figures." },
+  { still: "/demo/still-newspaper.jpg", name: "Archival front pages", body: "Reported events become a period front page with halftone photography." },
+  { still: "/demo/still-portrait.jpg", name: "Character portraits", body: "People in the story get a portrait with a slow push-in and a name card." },
   { still: "/demo/still-kinetic.jpg", name: "Kinetic type", body: "Revelations and quotes land as full-frame typography." },
 ];
 
@@ -34,7 +34,7 @@ const FEATURES = [
 
 const FAQ = [
   { q: "Is it really free?", a: "There are no plans, credits or paywalls. It runs on open-source models on your own computer. If you host it online, the free tiers of those providers have storage and traffic limits; the docs list them." },
-  { q: "Do I need a graphics card?", a: "No. Everything runs on a CPU, slower. On an 8-core laptop expect about 2–3 minutes for the script, 30–60 seconds per AI image and around 2 minutes to render a 60-second video. An NVIDIA GPU makes images far faster." },
+  { q: "Do I need a graphics card?", a: "No. Everything runs on a CPU, slower. On an 8-core desktop CPU we measured about 6 minutes to write the story and storyboard, about 2 minutes per AI image, and under 4 minutes to voice, animate and encode a 45-second video. An NVIDIA GPU makes images take seconds instead." },
   { q: "Can I publish the videos commercially?", a: "Generally yes. The voice (Kokoro) and language model (Qwen) are Apache-2.0. Images come from Stable Diffusion 1.5, whose OpenRAIL-M licence forbids certain harmful uses; you agree to those terms when you generate images. Music and sound effects are synthesised by ReelForge and are royalty-free." },
   { q: "Will this make my videos go viral?", a: "Nobody can promise that. ReelForge helps you test hooks, pace the story and keep a consistent look, which is what you control." },
   { q: "How accurate are the facts?", a: "The Story Director is told never to invent facts, and educational claims are checked against sources. Small local models still make mistakes, so review anything flagged before you publish." },
@@ -70,11 +70,11 @@ function HeroReel() {
           muted
           loop
           playsInline
-          aria-label="A video rendered by ReelForge about the lost Roanoke colony"
+          aria-label="A short documentary about the lost Roanoke colony, made with ReelForge"
         />
       </div>
-      <figcaption className="mt-3 flex items-center justify-between text-xs text-faint">
-        <span>Rendered by ReelForge, unedited</span>
+      <figcaption className="mt-3 flex items-center justify-between gap-4 text-xs text-faint">
+        <span>Made with ReelForge, script edited by hand</span>
         <span className="timecode">{timecode(t)}</span>
       </figcaption>
     </motion.figure>

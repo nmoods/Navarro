@@ -22,14 +22,15 @@ no GPU, Windows 11). Nothing below is marked complete unless it ran.
 | Caching | Per-asset input hashes and per-scene clip cache; an edit regenerates only what changed | `test_story_then_production_then_scene_edit_reuses_assets` |
 | Editor | Scene list (drag reorder), monitor with timecode, inspector (narration, visuals, camera, effects, transitions, captions, SFX, music cue, duration, visual data), image upload/variants/restore, per-scene regenerate, timeline with 5 tracks, Hook Lab, fact-check and pacing panels, project settings | e2e + manual browser review |
 | Other pages | Landing, auth, dashboard, creation wizard, projects library, Series Factory + bible, content planner (calendar, drag scheduling, AI topic discovery), media library, voice studio, Story DNA, settings with AI status | type-checked build, browser review |
-| Tests | Backend 19 (pytest), frontend 13 (Vitest + RTL), e2e 2 (Playwright, full create→edit→regenerate→render→download→re-export) | all passing |
-| Ops | Docker Compose (lite/full/GPU), setup/start scripts for Windows/macOS/Linux, Supabase RLS SQL, docs | scripts run on Windows |
+| Tests | Backend 19 (pytest), frontend 13 (Vitest + RTL), e2e 2 (Playwright, full create→edit→regenerate→render→download→re-export) | all passing on 2026-11-09 |
+| Real local AI, end to end | Ollama `qwen3.5:4b` story → editor corrections → ComfyUI SD 1.5 + LCM images → Kokoro voice → Whisper timing → render → 1080×1920 MP4 (the landing-page demo). Scene regeneration of one image and cached re-export verified. | 11.9 min first export, 3 min re-export with cached assets |
+| Subtitles | SRT/WebVTT export from aligned word timings | `test_create_edit_regenerate_render_download` |
+| Ops | Docker Compose (lite/full/GPU), setup/start scripts for Windows/macOS/Linux, Supabase RLS SQL, docs | Windows scripts run end to end |
 
 ## In progress / partially verified
 
 | Item | State |
 |---|---|
-| ComfyUI image generation | Adapter and workflow implemented; ComfyUI + SD 1.5 + LCM-LoRA installed by the setup script. End-to-end run with real images: see “Latest real run” below. |
 | Fact checking against Wikipedia | Implemented; **requires `REELFORGE_RESEARCH_CONTACT`** (Wikimedia blocks requests without a contact in the User-Agent). Without it, claims stay “Not checked” and the UI says why. |
 | Docker images | Written, not built on this machine (Docker is not installed here). |
 | Supabase / R2 deployment | Code paths implemented (JWKS auth, RLS SQL, S3-compatible storage); not exercised against live accounts. |
@@ -40,7 +41,7 @@ no GPU, Windows 11). Nothing below is marked complete unless it ran.
 * Depth estimation model (e.g. Depth-Anything-V2-Small, Apache-2.0) as an optional upgrade to the heuristic parallax depth.
 * Per-user storage quota and CPU-time quota for public multi-tenant hosting.
 * Redis-backed rate limiter for multiple API replicas.
-* Subtitle file export (SRT/VTT) alongside the MP4.
+* OpenVINO image provider for Intel CPUs (research estimates 8–15 s per image vs ≈125 s with ComfyUI `--cpu`).
 * Content repurposing (one story → several lengths/aspect ratios in one click); the data model supports it.
 * Template marketplace UI beyond private/public templates (no payments, by design).
 * Code-splitting of the 297 kB main bundle further; accessibility audit with a screen reader.
@@ -51,6 +52,8 @@ no GPU, Windows 11). Nothing below is marked complete unless it ran.
 * Small models often omit structured visual data; the direction-polish step fills it from narration or downgrades the visual type, so procedural scenes may show fewer data points than intended.
 * Offline geocoder covers Natural Earth 1:110m places plus a curated list; unknown places (e.g. Hatteras Island) make the scene fall back to parallax.
 * The project status becomes “Video ready” after a draft preview too.
+* SD 1.5 can duplicate subjects on tall canvases; images are now generated at 512×768 (512×640 for portraits) and cropped, which fixed the doubled face seen in the first real run, but SD 1.5 remains a dated model.
+* The first real script had a factual slip (“Croatoan on every post”); it was corrected by hand in the editor before the demo was rendered.
 
 ## Technical decisions
 

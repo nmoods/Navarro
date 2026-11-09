@@ -81,6 +81,10 @@ The scripts install everything inside `.runtime/` (git-ignored):
 | Stable Diffusion 1.5 (EMA-only) + LCM-LoRA | CreativeML OpenRAIL-M / OpenRAIL++ | 4.4 GB |
 | faster-whisper `base.en` (downloaded on first use) | MIT | 150 MB |
 
+Measured on an i7-10700 without a GPU: story and storyboard ≈6 min with `qwen3.5:4b`, each AI image ≈2 min,
+voice ≈3× faster than real time, full production of a 45-second video ≈12 min. An NVIDIA GPU cuts image time
+to seconds.
+
 Then start the backend **without** the fixture variables. Open *Settings → AI services* to confirm each
 provider is green. If ComfyUI is offline, ReelForge still renders using clearly labelled procedural art; if
 Ollama is offline you can still write and edit scenes by hand.

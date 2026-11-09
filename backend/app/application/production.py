@@ -48,7 +48,10 @@ from app.workers.context import JobContext
 
 logger = logging.getLogger("reelforge.production")
 
-IMAGE_SIZES = {AspectRatio.VERTICAL: (512, 896), AspectRatio.LANDSCAPE: (896, 512), AspectRatio.SQUARE: (640, 640)}
+# SD 1.5 is trained at 512 px; very elongated canvases duplicate subjects (two heads, two towers). Generate at
+# moderate aspect ratios and let the compositor crop to the output format.
+IMAGE_SIZES = {AspectRatio.VERTICAL: (512, 768), AspectRatio.LANDSCAPE: (768, 512), AspectRatio.SQUARE: (576, 576)}
+PORTRAIT_SIZE = (512, 640)
 _CAPTION_FIELDS = set(CaptionStyle.__dataclass_fields__)
 
 
@@ -126,6 +129,8 @@ class ProductionService:
             return existing[1]  # user-uploaded or pinned image: never overwrite
         provider = self.providers.image_for_generation()
         w, h = IMAGE_SIZES[AspectRatio(project.settings.aspect_ratio)]
+        if scene.visual_type == "character_portrait" and project.settings.aspect_ratio != "16:9":
+            w, h = PORTRAIT_SIZE
         seed = self._character_seed(project, scene)
         prompt = self.image_prompt(project, scene)
         digest = hash_inputs("image", provider.name, getattr(provider, "checkpoint", ""), prompt, prompts.NEGATIVE_PROMPT, w, h, seed)

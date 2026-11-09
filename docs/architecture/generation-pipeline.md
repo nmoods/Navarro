@@ -77,4 +77,7 @@ each job and by the hourly maintenance pass.
 | Scene render 1080×1920, parallax + fog + dust + captions | ≈66 ms/frame |
 | Procedural visuals (map, timeline, charts) at 540×960 draft | 17–31 ms/frame |
 | Music + SFX mix for 44 s | 2.5 s |
-| Final assembly with 8 transitions (44 s) | 5.8 s |
+| Final assembly with 8 transitions (44 s, draft) | 5.8 s |
+| Story Director with `qwen3.5:4b` (brief 91 s, hooks 53 s, script 40 s, storyboard 180 s) | ≈6 min |
+| SD 1.5 + LCM-LoRA image, 6 steps, 512×896, ComfyUI `--cpu` | ≈125 s each |
+| Full real production of a 7-scene, ~45 s video (4 AI images, voice, captions, render, final encode) | 11.9 min |

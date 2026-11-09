@@ -8,10 +8,32 @@ import math
 import cv2
 import numpy as np
 
+from app.media.camera import HEADROOM
 from app.media.color import cover_resize, gradient_canvas, palette_bgr
 from app.media.effects import fractal_noise
+from app.media.fonts import load_font
 from app.media.spec import SceneSpec
 from app.media.visuals.common import bgr_to_hex, draw_text, ease, mix, wrap
+
+
+def fit_lines(text: str, family: str, weight: int, max_width: int, px: int, max_lines: int = 3) -> tuple[int, list[str]]:
+    """Largest font size (<= px) at which text wraps into <= max_lines lines that each fit max_width."""
+    words = text.split()
+    while px > 10:
+        font = load_font(family, px, weight)
+        lines, current = [], ""
+        for word in words:
+            candidate = f"{current} {word}".strip()
+            if current and font.getlength(candidate) > max_width:
+                lines.append(current)
+                current = word
+            else:
+                current = candidate
+        lines.append(current)
+        if len(lines) <= max_lines and all(font.getlength(line) <= max_width for line in lines):
+            return px, lines
+        px = int(px * 0.92)
+    return px, [text]
 
 
 def newspaper_still(spec: SceneSpec, w: int, h: int, image: np.ndarray | None) -> np.ndarray:
@@ -21,20 +43,26 @@ def newspaper_still(spec: SceneSpec, w: int, h: int, image: np.ndarray | None) -
     base = np.array((178, 214, 232), np.float32)  # warm newsprint (BGR)
     img = np.clip(base * (0.86 + 0.18 * paper), 0, 255).astype(np.uint8)
     ink = "#1C1917"
-    m = int(w * 0.06)
+    # The still is larger than the frame (camera headroom) and the camera zooms in, so keep the layout inside
+    # the area that is visible at the end of a slow push-in.
+    visible = 1 / (HEADROOM * 1.16)
+    m = int(w * (1 - visible) / 2 + w * visible * 0.06)
+    top = int(h * (1 - visible) / 2 + h * visible * 0.04)
+    sw = w - 2 * m
     data = spec.visual_data
-    draw_text(img, "The Chronicle", w // 2, m, px=int(w * 0.1), family="UnifrakturMaguntia", weight=400, color=ink, anchor="mt")
-    y = m + int(w * 0.14)
+    draw_text(img, "The Chronicle", w // 2, top, px=int(sw * 0.13), family="UnifrakturMaguntia", weight=400, color=ink, anchor="mt")
+    y = top + int(sw * 0.17)
     cv2.line(img, (m, y), (w - m, y), (40, 40, 45), max(2, w // 400))
     dateline = data.get("dateline") or "Special Edition"
-    draw_text(img, dateline.upper(), w // 2, y + int(w * 0.012), px=int(w * 0.026), family="Playfair Display",
+    draw_text(img, dateline.upper(), w // 2, y + int(sw * 0.015), px=int(sw * 0.034), family="Playfair Display",
               weight=600, color=ink, anchor="mt")  # fmt: skip
-    y += int(w * 0.05)
+    y += int(sw * 0.065)
     cv2.line(img, (m, y), (w - m, y), (40, 40, 45), max(1, w // 700))
-    headline = data.get("headline") or spec.title
+    headline = (data.get("headline") or spec.title).upper()
     y += int(w * 0.03)
-    for line in wrap(headline.upper(), 18)[:3]:
-        _, lh = draw_text(img, line, w // 2, y, px=int(w * 0.085), family="Playfair Display", weight=900, color=ink, anchor="mt")
+    px, lines = fit_lines(headline, "Playfair Display", 900, sw, int(sw * 0.11), max_lines=3)
+    for line in lines:
+        _, lh = draw_text(img, line, w // 2, y, px=px, family="Playfair Display", weight=900, color=ink, anchor="mt")
         y += int(lh * 0.98)
     y += int(w * 0.03)
     photo_h = int(h * 0.36)
