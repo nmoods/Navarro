@@ -46,6 +46,13 @@ def _schema() -> Iterator[None]:
     get_engine().dispose()
 
 
+@pytest.fixture(autouse=True)
+def _reset_rate_limits() -> None:
+    from app.core.middleware import limiter
+
+    limiter.reset()
+
+
 @pytest.fixture
 def db() -> Iterator[Session]:
     with get_session_factory()() as session:

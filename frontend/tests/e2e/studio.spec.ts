@@ -41,6 +41,7 @@ test("create, edit, regenerate, render, preview and download a video", async ({ 
 
   // Storyboard generated (script + storyboard)
   await expect(page.getByRole("button", { name: /^1\./ }).first()).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByRole("button", { name: "Export video" })).toBeEnabled({ timeout: 60_000 }); // story job settled
   await page.getByRole("tab", { name: "Script" }).click();
   await expect(page.getByText("Hook Lab")).toBeVisible();
   await page.getByRole("tab", { name: "Scenes" }).click();

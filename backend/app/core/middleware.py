@@ -54,8 +54,9 @@ async def _send_json(send: Send, status: int, code: str, message: str) -> None:
 
 
 class SecurityMiddleware:
-    def __init__(self, app: ASGIApp, *, max_body: int, per_minute: int, hsts: bool) -> None:
+    def __init__(self, app: ASGIApp, *, max_body: int, per_minute: int, auth_per_minute: int, hsts: bool) -> None:
         self.app, self.max_body, self.per_minute, self.hsts = app, max_body, per_minute, hsts
+        self.auth_per_minute = auth_per_minute
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
@@ -72,7 +73,7 @@ class SecurityMiddleware:
                     await _send_json(send, 429, "rate_limited", "Too many requests, slow down.")
                     return
                 if path.startswith("/api/v1/auth/") and scope.get("method") == "POST":
-                    if not limiter.allow(f"auth:{client[0]}", 20):
+                    if not limiter.allow(f"auth:{client[0]}", self.auth_per_minute):
                         await _send_json(send, 429, "rate_limited", "Too many authentication attempts.")
                         return
             length = headers.get(b"content-length")

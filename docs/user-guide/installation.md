@@ -60,7 +60,7 @@ npm run dev      # http://127.0.0.1:5173
 Windows:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File infrastructure\scripts\setup-ai.ps1   # one-time, ~7 GB of downloads
+powershell -ExecutionPolicy Bypass -File infrastructure\scripts\setup-ai.ps1   # one-time, ~9 GB of downloads
 powershell -ExecutionPolicy Bypass -File infrastructure\scripts\start-ai.ps1   # each session
 ```
 
@@ -78,7 +78,7 @@ The scripts install everything inside `.runtime/` (git-ignored):
 | Kokoro-82M + 54 voices, isolated worker env (`ai-engine/tts-worker`) | Apache-2.0 (worker GPL-3.0) | 340 MB |
 | Ollama + `qwen3.5:4b` | MIT / Apache-2.0 | 3.3 GB |
 | ComfyUI + PyTorch (CPU or CUDA) | GPL-3.0 (separate process) | ~1.5 GB |
-| Stable Diffusion 1.5 fp16 + LCM-LoRA | CreativeML OpenRAIL-M / OpenRAIL++ | 2.1 GB |
+| Stable Diffusion 1.5 (EMA-only) + LCM-LoRA | CreativeML OpenRAIL-M / OpenRAIL++ | 4.4 GB |
 | faster-whisper `base.en` (downloaded on first use) | MIT | 150 MB |
 
 Then start the backend **without** the fixture variables. Open *Settings → AI services* to confirm each

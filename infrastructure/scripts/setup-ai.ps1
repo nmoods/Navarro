@@ -73,7 +73,7 @@ if (-not $SkipComfy) {
     & $Uv pip install --python .venv -r requirements.txt
     Pop-Location
     # Stable Diffusion 1.5 (CreativeML OpenRAIL-M: use restrictions apply, see docs/research/license-audit.md)
-    Download "https://huggingface.co/stable-diffusion-v1-5/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly-fp16.safetensors" "$C\models\checkpoints\v1-5-pruned-emaonly-fp16.safetensors"
+    Download "https://huggingface.co/stable-diffusion-v1-5/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.safetensors" "$C\models\checkpoints\v1-5-pruned-emaonly.safetensors"
     # LCM-LoRA for SD1.5 (OpenRAIL++): 4-8 step sampling, essential on CPU
     Download "https://huggingface.co/latent-consistency/lcm-lora-sdv1-5/resolve/main/pytorch_lora_weights.safetensors" "$C\models\loras\lcm-lora-sdv1-5.safetensors"
 }

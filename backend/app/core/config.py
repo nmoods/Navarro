@@ -71,7 +71,7 @@ class Settings(BaseSettings):
 
     image_provider: str = "auto"
     comfyui_url: str = "http://127.0.0.1:8188"
-    comfyui_checkpoint: str = "v1-5-pruned-emaonly-fp16.safetensors"
+    comfyui_checkpoint: str = "v1-5-pruned-emaonly.safetensors"
     comfyui_lcm_lora: str | None = "lcm-lora-sdv1-5.safetensors"
     comfyui_steps: int = 6
     comfyui_cfg: float = 1.5
@@ -91,7 +91,8 @@ class Settings(BaseSettings):
     whisper_compute_type: str = "int8"
 
     research_enabled: bool = True
-    research_user_agent: str = "ReelForgeAI/0.1 (self-hosted; fact-check module)"
+    # Wikimedia's robot policy requires a reachable contact (email or URL) in the User-Agent.
+    research_contact: str | None = None
 
     embedded_worker: bool = True
     worker_concurrency: int = 1
@@ -102,6 +103,7 @@ class Settings(BaseSettings):
     max_request_bytes: int = 30 * 1024 * 1024
     max_upload_bytes: int = 25 * 1024 * 1024
     rate_limit_per_minute: int = 120
+    auth_rate_limit_per_minute: int = 20
     generation_rate_limit_per_hour: int = 30
     max_active_jobs_per_user: int = 3
     render_timeout_seconds: int = 1800

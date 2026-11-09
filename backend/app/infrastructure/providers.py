@@ -94,7 +94,7 @@ def build_providers(settings: Settings) -> Providers:
     if settings.research_enabled:
         research = (
             fixtures.FixtureResearch() if settings.llm_provider == "fixture"
-            else WikipediaResearchProvider(settings.research_user_agent)
+            else WikipediaResearchProvider(settings.research_contact)
         )  # fmt: skip
     return Providers(llm, image, procedural, tts, stt, research, auto_image=settings.image_provider == "auto")
 

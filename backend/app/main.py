@@ -95,7 +95,8 @@ def create_app() -> FastAPI:
         allow_headers=["Authorization", "Content-Type", "X-Requested-With", "X-Request-Id"],
         expose_headers=["X-Request-Id"], max_age=600,
     )  # fmt: skip
-    app.add_middleware(SecurityMiddleware, max_body=settings.max_request_bytes, per_minute=settings.rate_limit_per_minute, hsts=prod)
+    app.add_middleware(SecurityMiddleware, max_body=settings.max_request_bytes, per_minute=settings.rate_limit_per_minute,
+                       auth_per_minute=settings.auth_rate_limit_per_minute, hsts=prod)
 
     api = APIRouter(prefix="/api/v1")
     for module in (auth, projects, scenes, jobs, media, creative, planning, account):

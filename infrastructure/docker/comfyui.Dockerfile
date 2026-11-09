@@ -6,8 +6,8 @@ WORKDIR /opt/ComfyUI
 RUN pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu \
     && pip install --no-cache-dir -r requirements.txt
 # Stable Diffusion 1.5 (CreativeML OpenRAIL-M, use restrictions apply) + LCM-LoRA (OpenRAIL++)
-RUN curl -fL -o models/checkpoints/v1-5-pruned-emaonly-fp16.safetensors \
-      https://huggingface.co/stable-diffusion-v1-5/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly-fp16.safetensors \
+RUN curl -fL -o models/checkpoints/v1-5-pruned-emaonly.safetensors \
+      https://huggingface.co/stable-diffusion-v1-5/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.safetensors \
  && curl -fL -o models/loras/lcm-lora-sdv1-5.safetensors \
       https://huggingface.co/latent-consistency/lcm-lora-sdv1-5/resolve/main/pytorch_lora_weights.safetensors
 RUN useradd --create-home --uid 10002 comfy && chown -R comfy /opt/ComfyUI

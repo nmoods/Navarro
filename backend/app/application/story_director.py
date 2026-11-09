@@ -8,6 +8,7 @@ import re
 from dataclasses import dataclass, field
 
 from app.application import prompts
+from app.application.direction import polish_scene, polish_storyboard
 from app.application.narrative import split_into_scenes
 from app.application.ports import LLMProvider, ResearchProvider, Source
 from app.core.errors import ProviderError
@@ -119,7 +120,7 @@ class StoryDirector:
             StoryboardDraft,
             temperature=0.7,
         )
-        return self.enforce_narration(draft, scenes_text)
+        return polish_storyboard(self.enforce_narration(draft, scenes_text), ctx.visual_style)
 
     @staticmethod
     def enforce_narration(draft: StoryboardDraft, scenes_text: list[str]) -> StoryboardDraft:
@@ -148,7 +149,7 @@ class StoryDirector:
         )
         if not rewrite_narration:
             scene = scene.model_copy(update={"narration": narration})
-        return scene
+        return polish_scene(scene, ctx.visual_style, 0, None)
 
     def fact_check(self, claims: list[Claim], max_claims: int = 6) -> list[Claim]:
         if not self.research:

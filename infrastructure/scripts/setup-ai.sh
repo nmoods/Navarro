@@ -44,8 +44,8 @@ if [[ $SKIP_COMFY -eq 0 ]]; then
   else IDX=https://download.pytorch.org/whl/cpu; fi
   uv pip install --python "$C/.venv" torch torchvision torchaudio --index-url "$IDX"
   uv pip install --python "$C/.venv" -r "$C/requirements.txt"
-  download https://huggingface.co/stable-diffusion-v1-5/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly-fp16.safetensors \
-    "$C/models/checkpoints/v1-5-pruned-emaonly-fp16.safetensors"
+  download https://huggingface.co/stable-diffusion-v1-5/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.safetensors \
+    "$C/models/checkpoints/v1-5-pruned-emaonly.safetensors"
   download https://huggingface.co/latent-consistency/lcm-lora-sdv1-5/resolve/main/pytorch_lora_weights.safetensors \
     "$C/models/loras/lcm-lora-sdv1-5.safetensors"
 fi

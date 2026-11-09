@@ -98,8 +98,14 @@ def generate_story(session: Session, director: StoryDirector, project: Project, 
     project.status = ProjectStatus.GENERATING_STORY.value
     session.commit()
     cc = creative_context(session, project, hook_style)
-    ctx.stage(JobStatus.SCRIPT_GENERATION, 3, "Researching the subject")
-    reference, sources = director.gather_reference(cc.topic) if project.settings.fact_check_enabled else ("", [])
+    research_ok = False
+    if project.settings.fact_check_enabled and director.research:
+        health = director.research.health()
+        research_ok = health.available
+        if not research_ok:
+            ctx.log("warning", f"Fact checking unavailable: {health.detail}")
+    ctx.stage(JobStatus.SCRIPT_GENERATION, 3, "Researching the subject" if research_ok else "Skipping research (offline)")
+    reference, sources = director.gather_reference(cc.topic) if research_ok else ("", [])
     ctx.stage(JobStatus.SCRIPT_GENERATION, 8, "Story Director is analysing the topic")
     brief = director.generate_brief(cc, reference)
     ctx.stage(JobStatus.SCRIPT_GENERATION, 18, "Hook Lab: writing alternative hooks")
@@ -108,7 +114,7 @@ def generate_story(session: Session, director: StoryDirector, project: Project, 
     ctx.stage(JobStatus.SCRIPT_GENERATION, 28, "Writing the narration")
     script = director.generate_script(cc, brief, hooks[chosen].text)
     claims = script.claims or brief.key_facts
-    if fact_check and project.settings.fact_check_enabled and director.research:
+    if fact_check and research_ok:
         ctx.stage(JobStatus.SCRIPT_GENERATION, 40, "Fact checker: verifying claims against sources")
         claims = director.fact_check(claims)
     version = (session.scalar(select(func.max(ScriptVersion.version)).where(ScriptVersion.project_id == project.id)) or 0) + 1
