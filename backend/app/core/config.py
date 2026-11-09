@@ -71,7 +71,7 @@ class Settings(BaseSettings):
 
     image_provider: str = "auto"
     comfyui_url: str = "http://127.0.0.1:8188"
-    comfyui_checkpoint: str = "dreamshaper_8.safetensors"
+    comfyui_checkpoint: str = "v1-5-pruned-emaonly-fp16.safetensors"
     comfyui_lcm_lora: str | None = "lcm-lora-sdv1-5.safetensors"
     comfyui_steps: int = 6
     comfyui_cfg: float = 1.5

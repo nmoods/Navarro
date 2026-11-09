@@ -1,0 +1,134 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/bricolage-grotesque";
+@import "@fontsource/ibm-plex-sans/400.css";
+@import "@fontsource/ibm-plex-sans/500.css";
+@import "@fontsource/ibm-plex-sans/600.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * ReelForge tokens. Projection-room black tinted violet; ultraviolet = action, projector blue = time/progress.
+ * The app is dark-only by design (an edit bay), so light tokens are intentionally the same values.
+ */
+@theme inline {
+  --font-heading: "Bricolage Grotesque Variable", "IBM Plex Sans", sans-serif;
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+
+  --color-ink: #0a0910;
+  --color-surface: #14121c;
+  --color-raised: #1d1a28;
+  --color-line: #2a2638;
+  --color-line-strong: #3a3550;
+  --color-text: #ece9f5;
+  --color-subtle: #a39fb5;
+  --color-faint: #6e6a80;
+  --color-uv: #9d7bff;
+  --color-uv-deep: #5b3fd9;
+  --color-beam: #6fb7ff;
+  --color-ok: #5ee3a1;
+  --color-warn: #f5c26b;
+  --color-bad: #ff6b81;
+
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: #0a0910;
+  --foreground: #ece9f5;
+  --card: #14121c;
+  --card-foreground: #ece9f5;
+  --popover: #1d1a28;
+  --popover-foreground: #ece9f5;
+  --primary: #9d7bff;
+  --primary-foreground: #0d0820;
+  --secondary: #1d1a28;
+  --secondary-foreground: #ece9f5;
+  --muted: #1d1a28;
+  --muted-foreground: #a39fb5;
+  --accent: #262236;
+  --accent-foreground: #ece9f5;
+  --destructive: #ff6b81;
+  --border: #2a2638;
+  --input: #2a2638;
+  --ring: #9d7bff;
+  color-scheme: dark;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    background: var(--color-ink);
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "ss01", "ss02";
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-heading);
+    font-variation-settings: "wdth" 88;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-uv);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--color-uv) 45%, transparent);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .timecode {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+    color: var(--color-beam);
+  }
+  .frame-916 {
+    aspect-ratio: 9 / 16;
+  }
+  .beam-glow {
+    background: radial-gradient(60% 50% at 50% 40%, color-mix(in oklab, var(--color-uv) 26%, transparent), transparent 70%),
+      radial-gradient(40% 35% at 50% 75%, color-mix(in oklab, var(--color-beam) 14%, transparent), transparent 70%);
+  }
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-line-strong) transparent;
+  }
+}

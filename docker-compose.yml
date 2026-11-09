@@ -1,0 +1,99 @@
+# ReelForge AI - Docker Compose.
+#
+#   Lightweight development (no AI models; deterministic test providers, real render engine):
+#     docker compose --profile lite up --build
+#   Full local AI (Ollama + ComfyUI on CPU; add the gpu override for NVIDIA):
+#     docker compose --profile full up --build
+#     docker compose -f docker-compose.yml -f infrastructure/docker/compose.gpu.yml --profile full up --build
+#
+# Only the frontend (5173) and API (8000) are published, and only on 127.0.0.1. Ollama, ComfyUI and
+# PostgreSQL live on the internal network and are never exposed to the host or the internet.
+
+x-api-env: &api-env
+  REELFORGE_APP_ENV: development
+  REELFORGE_DATABASE_URL: postgresql+psycopg://reelforge:reelforge@db:5432/reelforge
+  REELFORGE_JWT_SECRET: ${REELFORGE_JWT_SECRET:-dev-only-insecure-secret-change-me-0123456789}
+  REELFORGE_PUBLIC_API_URL: http://127.0.0.1:8000
+  REELFORGE_CORS_ORIGINS: http://127.0.0.1:5173,http://localhost:5173
+  REELFORGE_STORAGE_ROOT: /data/storage
+  REELFORGE_WORK_ROOT: /data/work
+  REELFORGE_KOKORO_WORKER_PYTHON: /opt/tts/.venv/bin/python
+  REELFORGE_KOKORO_WORKER_SCRIPT: /opt/tts/kokoro_worker.py
+  REELFORGE_KOKORO_MODEL_PATH: /opt/models/kokoro/kokoro-v1.0.onnx
+  REELFORGE_KOKORO_VOICES_PATH: /opt/models/kokoro/voices-v1.0.bin
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: reelforge
+      POSTGRES_PASSWORD: reelforge
+      POSTGRES_DB: reelforge
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U reelforge"]
+      interval: 5s
+      retries: 10
+    profiles: [lite, full]
+
+  api-lite:
+    build: { context: ., dockerfile: infrastructure/docker/backend.Dockerfile }
+    environment:
+      <<: *api-env
+      REELFORGE_LLM_PROVIDER: fixture
+      REELFORGE_IMAGE_PROVIDER: fixture
+      REELFORGE_TTS_PROVIDER: fixture
+      REELFORGE_STT_PROVIDER: fixture
+      REELFORGE_RESEARCH_ENABLED: "false"
+    ports: ["127.0.0.1:8000:8000"]
+    volumes: [media:/data]
+    depends_on: { db: { condition: service_healthy } }
+    profiles: [lite]
+
+  api:
+    build: { context: ., dockerfile: infrastructure/docker/backend.Dockerfile }
+    environment:
+      <<: *api-env
+      REELFORGE_OLLAMA_URL: http://ollama:11434
+      REELFORGE_COMFYUI_URL: http://comfyui:8188
+      REELFORGE_EMBEDDED_WORKER: "false"
+    ports: ["127.0.0.1:8000:8000"]
+    volumes: [media:/data]
+    depends_on: { db: { condition: service_healthy } }
+    profiles: [full]
+
+  worker:
+    build: { context: ., dockerfile: infrastructure/docker/backend.Dockerfile }
+    command: ["python", "-m", "app.workers.runner"]
+    environment:
+      <<: *api-env
+      REELFORGE_OLLAMA_URL: http://ollama:11434
+      REELFORGE_COMFYUI_URL: http://comfyui:8188
+    volumes: [media:/data]
+    depends_on: { db: { condition: service_healthy } }
+    deploy:
+      resources:
+        limits: { cpus: "6", memory: 8g }
+    profiles: [full]
+
+  ollama:
+    image: ollama/ollama:0.40.15
+    volumes: [ollama:/root/.ollama]
+    entrypoint: ["/bin/sh", "-c", "ollama serve & sleep 3 && ollama pull ${REELFORGE_OLLAMA_MODEL:-qwen3.5:4b} && wait"]
+    profiles: [full]
+
+  comfyui:
+    build: { context: ., dockerfile: infrastructure/docker/comfyui.Dockerfile }
+    volumes: [comfy-models:/opt/ComfyUI/models]
+    profiles: [full]
+
+  frontend:
+    build: { context: ., dockerfile: infrastructure/docker/frontend.Dockerfile, args: { VITE_API_URL: "http://127.0.0.1:8000" } }
+    ports: ["127.0.0.1:5173:80"]
+    profiles: [lite, full]
+
+volumes:
+  pgdata:
+  media:
+  ollama:
+  comfy-models:
