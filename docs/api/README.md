@@ -1,6 +1,6 @@
 # API reference
 
-Base path `/api/v1`. Interactive OpenAPI docs: `http://127.0.0.1:8000/api/docs` (disabled in production).
+Base path `/api/v1`. Interactive OpenAPI docs: `http://127.0.0.1:8010/api/docs` (disabled in production).
 All endpoints except `/health`, `/system/options`, `/auth/*` and signed media URLs require
 `Authorization: Bearer <access token>`.
 

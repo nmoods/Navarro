@@ -1,7 +1,7 @@
 // Minimal typed HTTP client. Access tokens live in memory only (never localStorage);
 // the refresh token is an httpOnly cookie handled by the browser.
 
-export const API_URL = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ?? "http://127.0.0.1:8000";
+export const API_URL = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ?? "http://127.0.0.1:8010";
 
 export class ApiError extends Error {
   readonly status: number;

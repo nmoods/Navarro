@@ -39,7 +39,7 @@ class Settings(BaseSettings):
 
     app_env: AppEnv = AppEnv.DEVELOPMENT
     app_name: str = "ReelForge AI"
-    public_api_url: str = "http://127.0.0.1:8000"
+    public_api_url: str = "http://127.0.0.1:8010"
     log_level: str = "INFO"
 
     database_url: str = f"sqlite:///{(BACKEND_ROOT / 'var' / 'reelforge.db').as_posix()}"

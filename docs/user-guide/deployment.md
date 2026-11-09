@@ -40,7 +40,7 @@ REELFORGE_JWT_SECRET=$(python -c "import secrets;print(secrets.token_urlsafe(48)
 REELFORGE_PUBLIC_API_URL=https://api.example.com
 REELFORGE_CORS_ORIGINS=https://reelforge.pages.dev
 REELFORGE_EMBEDDED_WORKER=false
-uv run uvicorn app.main:app --host 127.0.0.1 --port 8000 --proxy-headers   # behind Caddy/nginx with TLS
+uv run uvicorn app.main:app --host 127.0.0.1 --port 8010 --proxy-headers   # behind Caddy/nginx with TLS
 uv run python -m app.workers.runner                                      # on the AI machine
 ```
 

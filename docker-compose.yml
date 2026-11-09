@@ -6,14 +6,14 @@
 #     docker compose --profile full up --build
 #     docker compose -f docker-compose.yml -f infrastructure/docker/compose.gpu.yml --profile full up --build
 #
-# Only the frontend (5173) and API (8000) are published, and only on 127.0.0.1. Ollama, ComfyUI and
+# Only the frontend (5173) and API (8010) are published, and only on 127.0.0.1. Ollama, ComfyUI and
 # PostgreSQL live on the internal network and are never exposed to the host or the internet.
 
 x-api-env: &api-env
   REELFORGE_APP_ENV: development
   REELFORGE_DATABASE_URL: postgresql+psycopg://reelforge:reelforge@db:5432/reelforge
   REELFORGE_JWT_SECRET: ${REELFORGE_JWT_SECRET:-dev-only-insecure-secret-change-me-0123456789}
-  REELFORGE_PUBLIC_API_URL: http://127.0.0.1:8000
+  REELFORGE_PUBLIC_API_URL: http://127.0.0.1:8010
   REELFORGE_CORS_ORIGINS: http://127.0.0.1:5173,http://localhost:5173
   REELFORGE_STORAGE_ROOT: /data/storage
   REELFORGE_WORK_ROOT: /data/work
@@ -45,7 +45,7 @@ services:
       REELFORGE_TTS_PROVIDER: fixture
       REELFORGE_STT_PROVIDER: fixture
       REELFORGE_RESEARCH_ENABLED: "false"
-    ports: ["127.0.0.1:8000:8000"]
+    ports: ["127.0.0.1:8010:8000"]
     volumes: [media:/data]
     depends_on: { db: { condition: service_healthy } }
     profiles: [lite]
@@ -57,7 +57,7 @@ services:
       REELFORGE_OLLAMA_URL: http://ollama:11434
       REELFORGE_COMFYUI_URL: http://comfyui:8188
       REELFORGE_EMBEDDED_WORKER: "false"
-    ports: ["127.0.0.1:8000:8000"]
+    ports: ["127.0.0.1:8010:8000"]
     volumes: [media:/data]
     depends_on: { db: { condition: service_healthy } }
     profiles: [full]
@@ -88,7 +88,7 @@ services:
     profiles: [full]
 
   frontend:
-    build: { context: ., dockerfile: infrastructure/docker/frontend.Dockerfile, args: { VITE_API_URL: "http://127.0.0.1:8000" } }
+    build: { context: ., dockerfile: infrastructure/docker/frontend.Dockerfile, args: { VITE_API_URL: "http://127.0.0.1:8010" } }
     ports: ["127.0.0.1:5173:80"]
     profiles: [lite, full]
 

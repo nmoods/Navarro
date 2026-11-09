@@ -27,7 +27,7 @@ own hardware. There are no credits, no paywalls and no paid AI APIs.
 ```bash
 # backend (Python 3.13 is installed automatically by uv)
 cd backend && uv sync
-uv run uvicorn app.main:app --reload            # http://127.0.0.1:8000/api/docs
+uv run uvicorn app.main:app --reload            # http://127.0.0.1:8010/api/docs
 
 # frontend
 cd frontend && npm ci && npm run dev            # http://127.0.0.1:5173

@@ -36,16 +36,16 @@ Lightweight mode (no models needed):
 # Windows PowerShell
 $env:REELFORGE_LLM_PROVIDER="fixture"; $env:REELFORGE_IMAGE_PROVIDER="fixture"
 $env:REELFORGE_TTS_PROVIDER="fixture"; $env:REELFORGE_STT_PROVIDER="fixture"
-uv run uvicorn app.main:app --reload --port 8000
+uv run uvicorn app.main:app --reload --port 8010
 ```
 
 ```bash
 # macOS / Linux
 REELFORGE_LLM_PROVIDER=fixture REELFORGE_IMAGE_PROVIDER=fixture REELFORGE_TTS_PROVIDER=fixture \
-REELFORGE_STT_PROVIDER=fixture uv run uvicorn app.main:app --reload --port 8000
+REELFORGE_STT_PROVIDER=fixture uv run uvicorn app.main:app --reload --port 8010
 ```
 
-API docs: http://127.0.0.1:8000/api/docs
+API docs: http://127.0.0.1:8010/api/docs
 
 ## 2. Frontend
 

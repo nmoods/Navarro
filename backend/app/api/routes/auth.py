@@ -29,6 +29,7 @@ from app.schemas.core import LoginIn, RegisterIn, TokenOut, UserOut
 router = APIRouter(prefix="/auth", tags=["auth"])
 COOKIE = "rf_refresh"
 COOKIE_PATH = "/api/v1/auth"
+REUSE_GRACE_SECONDS = 20
 _DUMMY_HASH = hash_password("timing-equaliser-not-a-real-password")
 
 
@@ -106,7 +107,16 @@ def refresh(request: Request, response: Response, session: DbSession, settings: 
         raise AuthenticationError("Session expired")
     expires = token.expires_at if token.expires_at.tzinfo else token.expires_at.replace(tzinfo=UTC)
     if token.revoked_at is not None:
-        # Reuse of a rotated token => likely theft: revoke the whole family.
+        revoked = token.revoked_at if token.revoked_at.tzinfo else token.revoked_at.replace(tzinfo=UTC)
+        family_alive = session.scalar(select(RefreshToken.id).where(
+            RefreshToken.family_id == token.family_id, RefreshToken.revoked_at.is_(None)).limit(1))  # fmt: skip
+        if family_alive and (now - revoked).total_seconds() < REUSE_GRACE_SECONDS:
+            # Benign race: two tabs (or a double effect) refreshed with the same cookie within seconds.
+            user = session.get(User, token.user_id)
+            if user is None or not user.is_active:
+                raise AuthenticationError("Account disabled")
+            return _issue(session, settings, response, user, request, family=token.family_id)
+        # Reuse of a rotated token outside the grace window => likely theft: revoke the whole family.
         session.execute(update(RefreshToken).where(RefreshToken.family_id == token.family_id).values(revoked_at=now))
         audit(session, request, token.user_id, "auth.refresh_reuse_detected")
         session.commit()

@@ -63,10 +63,10 @@ export function LoginPage() {
     <AuthFrame title="Sign in" footer={<>New here? <Link className="text-uv hover:underline" to="/register">Create an account</Link></>}>
       <form onSubmit={onSubmit} className="grid gap-4" noValidate>
         {error ? <ErrorNotice error={error} /> : null}
-        <Field label="Email" htmlFor="email" hint={errs.email?.message}>
+        <Field label="Email" htmlFor="email" error={errs.email?.message}>
           <Input id="email" type="email" autoComplete="email" aria-invalid={!!errs.email} {...form.register("email")} />
         </Field>
-        <Field label="Password" htmlFor="password" hint={errs.password?.message}>
+        <Field label="Password" htmlFor="password" error={errs.password?.message}>
           <Input id="password" type="password" autoComplete="current-password" aria-invalid={!!errs.password} {...form.register("password")} />
         </Field>
         <Button type="submit" disabled={form.formState.isSubmitting}>{form.formState.isSubmitting ? "Signing in…" : "Sign in"}</Button>
@@ -94,13 +94,13 @@ export function RegisterPage() {
     <AuthFrame title="Create your account" footer={<>Already have one? <Link className="text-uv hover:underline" to="/login">Sign in</Link></>}>
       <form onSubmit={onSubmit} className="grid gap-4" noValidate>
         {error ? <ErrorNotice error={error} /> : null}
-        <Field label="Your name" htmlFor="display_name" hint={errs.display_name?.message}>
+        <Field label="Your name" htmlFor="display_name" error={errs.display_name?.message}>
           <Input id="display_name" autoComplete="name" aria-invalid={!!errs.display_name} {...form.register("display_name")} />
         </Field>
-        <Field label="Email" htmlFor="email" hint={errs.email?.message}>
+        <Field label="Email" htmlFor="email" error={errs.email?.message}>
           <Input id="email" type="email" autoComplete="email" aria-invalid={!!errs.email} {...form.register("email")} />
         </Field>
-        <Field label="Password" htmlFor="password" hint={errs.password?.message ?? "At least 10 characters, mixing letters, numbers or symbols."}>
+        <Field label="Password" htmlFor="password" error={errs.password?.message} hint="At least 10 characters, mixing letters, numbers or symbols.">
           <Input id="password" type="password" autoComplete="new-password" aria-invalid={!!errs.password} {...form.register("password")} />
         </Field>
         <Button type="submit" disabled={form.formState.isSubmitting}>{form.formState.isSubmitting ? "Creating account…" : "Create account"}</Button>

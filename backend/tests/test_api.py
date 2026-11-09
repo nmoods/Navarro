@@ -16,7 +16,21 @@ def _email() -> str:
 
 
 # ---- authentication ------------------------------------------------------------------------------------
-def test_register_login_refresh_rotation_and_reuse_detection(client) -> None:  # type: ignore[no-untyped-def]
+def test_concurrent_refresh_within_grace_window_is_not_theft(client) -> None:  # type: ignore[no-untyped-def]
+    register(client, _email())
+    cookie = client.cookies.get("rf_refresh")
+    hdr = {"X-Requested-With": "reelforge", "Cookie": f"rf_refresh={cookie}"}
+    client.cookies.clear()
+    first = client.post("/api/v1/auth/refresh", headers=hdr)
+    client.cookies.clear()
+    second = client.post("/api/v1/auth/refresh", headers=hdr)  # e.g. a second tab, same old cookie
+    assert first.status_code == 200 and second.status_code == 200
+
+
+def test_register_login_refresh_rotation_and_reuse_detection(client, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    from app.api.routes import auth as auth_routes
+
+    monkeypatch.setattr(auth_routes, "REUSE_GRACE_SECONDS", 0)  # simulate a replay long after rotation
     email = _email()
     headers = register(client, email)
     assert client.get("/api/v1/auth/me", headers=headers).json()["email"] == email
@@ -122,10 +136,10 @@ def test_create_edit_regenerate_render_download(client, worker) -> None:  # type
     status = client.get(f"/api/v1/jobs/{job.json()['id']}", headers=h).json()
     assert status["status"] == "completed", status
     exports = client.get(f"/api/v1/projects/{project['id']}/exports", headers=h).json()
-    video = client.get(exports[0]["download_url"].replace("http://127.0.0.1:8000", ""))
+    video = client.get(exports[0]["download_url"].replace("http://127.0.0.1:8010", ""))
     assert video.status_code == 200 and video.content[4:8] == b"ftyp"
     assert "attachment" in video.headers["content-disposition"]
-    tampered = exports[0]["video_url"].replace("http://127.0.0.1:8000", "").replace("sig=", "sig=x")
+    tampered = exports[0]["video_url"].replace("http://127.0.0.1:8010", "").replace("sig=", "sig=x")
     assert client.get(tampered).status_code == 403
     logs = client.get(f"/api/v1/jobs/{job.json()['id']}/logs", headers=h).json()
     assert any("Assembling" in log["message"] for log in logs)

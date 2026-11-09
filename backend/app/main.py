@@ -37,7 +37,9 @@ def run_migrations() -> None:
     from alembic.config import Config
 
     from app.core.config import BACKEND_ROOT
+    from app.infrastructure.database.session import get_engine
 
+    get_engine()  # creates the SQLite folder if needed before Alembic connects
     cfg = Config(str(BACKEND_ROOT / "alembic.ini"))
     cfg.set_main_option("script_location", str(BACKEND_ROOT / "alembic"))
     command.upgrade(cfg, "head")

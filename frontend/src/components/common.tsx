@@ -124,14 +124,14 @@ export function ProviderBanner({ kinds }: { kinds?: string[] }) {
   );
 }
 
-export function Field({ label, hint, htmlFor, children }: { label: string; hint?: string; htmlFor?: string; children: ReactNode }) {
+export function Field({ label, hint, error, htmlFor, children }: { label: string; hint?: string; error?: string; htmlFor?: string; children: ReactNode }) {
   return (
-    <div className="grid gap-1.5">
+    <div className="grid content-start gap-1.5">
       <label htmlFor={htmlFor} className="text-sm font-medium text-text">
         {label}
       </label>
       {children}
-      {hint && <p className="text-xs text-faint">{hint}</p>}
+      {error ? <p className="text-xs text-bad" role="alert">{error}</p> : hint && <p className="text-xs text-faint">{hint}</p>}
     </div>
   );
 }

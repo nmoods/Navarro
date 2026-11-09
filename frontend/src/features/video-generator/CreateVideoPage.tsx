@@ -151,7 +151,7 @@ export default function CreateVideoPage() {
       <form onSubmit={(e) => e.preventDefault()} className="grid max-w-3xl gap-8">
         {step === 0 && (
           <>
-            <Field label="What is the video about?" htmlFor="topic" hint={form.formState.errors.topic?.message ?? "Be specific. “Why the Mary Celeste was found abandoned” beats “ships”."}>
+            <Field label="What is the video about?" htmlFor="topic" error={form.formState.errors.topic?.message} hint="Be specific. “Why the Mary Celeste was found abandoned” beats “ships”.">
               <Textarea id="topic" rows={3} placeholder="The mysterious disappearance of the Roanoke colony" aria-invalid={!!form.formState.errors.topic} {...form.register("topic")} />
             </Field>
             <Field label="Length">

@@ -21,21 +21,27 @@ const supabaseReady = import.meta.env.VITE_AUTH_MODE === "supabase"
   ? import("@/services/supabase").then((m) => m.supabaseAdapter())
   : Promise.resolve(null);
 
+let bootstrapping: Promise<void> | null = null;
+
 export const useAuth = create<AuthState>((set) => ({
   user: null,
   token: null,
   status: "unknown",
 
-  bootstrap: async () => {
-    try {
-    const supabase = await supabaseReady;
-      const token = supabase ? await supabase.session() : (await authApi.refresh()).access_token;
-      if (!token) throw new Error("no session");
-      set({ token });
-      set({ user: await authApi.me(), status: "authenticated" });
-    } catch {
-      set({ user: null, token: null, status: "anonymous" });
-    }
+  bootstrap: () => {
+    // Single-flight: StrictMode double effects or repeated calls share one refresh request.
+    bootstrapping ??= (async () => {
+      try {
+        const supabase = await supabaseReady;
+        const token = supabase ? await supabase.session() : (await authApi.refresh()).access_token;
+        if (!token) throw new Error("no session");
+        set({ token });
+        set({ user: await authApi.me(), status: "authenticated" });
+      } catch {
+        set({ user: null, token: null, status: "anonymous" });
+      }
+    })();
+    return bootstrapping;
   },
 
   login: async (email, password) => {
