@@ -141,6 +141,9 @@ def test_create_edit_regenerate_render_download(client, worker) -> None:  # type
     assert "attachment" in video.headers["content-disposition"]
     tampered = exports[0]["video_url"].replace("http://127.0.0.1:8010", "").replace("sig=", "sig=x")
     assert client.get(tampered).status_code == 403
+    srt = client.get(f"/api/v1/projects/{project['id']}/subtitles.srt", headers=h)
+    assert srt.status_code == 200 and srt.text.startswith("1" + chr(10) + "00:00:00,") and " --> " in srt.text
+    assert client.get(f"/api/v1/projects/{project['id']}/subtitles.vtt", headers=h).text.startswith("WEBVTT")
     logs = client.get(f"/api/v1/jobs/{job.json()['id']}/logs", headers=h).json()
     assert any("Assembling" in log["message"] for log in logs)
 

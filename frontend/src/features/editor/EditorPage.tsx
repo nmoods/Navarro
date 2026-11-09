@@ -22,6 +22,19 @@ import { SceneList } from "./SceneList";
 import { ScriptPanel } from "./ScriptPanel";
 import { Timeline } from "./Timeline";
 
+async function downloadSubtitles(projectId: string, title: string) {
+  try {
+    const url = await projectsApi.subtitles(projectId, "srt");
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${title.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.srt`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
+  } catch (e) {
+    toast.error(errorMessage(e));
+  }
+}
+
 export default function EditorPage() {
   const { projectId = "" } = useParams();
   const navigate = useNavigate();
@@ -119,6 +132,9 @@ export default function EditorPage() {
           <Button size="sm" disabled={busy || !scenes.length} onClick={() => produce.mutate("final")}><Film className="size-4" /> Export video</Button>
           {latest && latest.quality === "final" && (
             <Button asChild size="sm" variant="outline"><a href={latest.download_url}><Download className="size-4" /> MP4</a></Button>
+          )}
+          {latest && (
+            <Button size="sm" variant="ghost" onClick={() => downloadSubtitles(projectId, p?.title ?? "subtitles")}>SRT</Button>
           )}
         </div>
       </header>

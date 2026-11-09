@@ -5,13 +5,14 @@ from __future__ import annotations
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Query, Request, status
+from fastapi import APIRouter, Query, Request, Response, status
 from sqlalchemy import func, or_, select
 
 from app.api.deps import CurrentUser, DbSession, SettingsDep, StorageDep, audit, owned
 from app.api.presenters import export_out, project_out, scenes_out
 from app.application.projects import ProjectInput, create_project
 from app.application.story_service import current_storyboard, latest_script
+from app.application.subtitles import build_cues, to_srt, to_vtt
 from app.core.errors import ConflictError, NotFoundError, ValidationFailedError
 from app.domain.enums import ACTIVE_JOB_STATUSES, JobType
 from app.infrastructure.database.models import GenerationJob, Project, StoryDnaProfile, VideoExport
@@ -169,3 +170,16 @@ def project_jobs(project_id: uuid.UUID, session: DbSession, user: CurrentUser) -
     owned(session, Project, project_id, user)
     rows = session.scalars(select(GenerationJob).where(GenerationJob.project_id == project_id).order_by(GenerationJob.created_at.desc()).limit(20))
     return [JobOut.model_validate(j) for j in rows]
+
+
+@router.get("/{project_id}/subtitles.{fmt}")
+def subtitles(project_id: uuid.UUID, fmt: str, session: DbSession, user: CurrentUser) -> Response:
+    """Subtitle file (SRT or WebVTT) for uploading to platforms that support separate captions."""
+    if fmt not in ("srt", "vtt"):
+        raise NotFoundError("Use .srt or .vtt")
+    project = owned(session, Project, project_id, user)
+    cues = build_cues(session, project)
+    body = to_srt(cues) if fmt == "srt" else to_vtt(cues)
+    name = "".join(c if c.isalnum() else "-" for c in project.title.lower()).strip("-")[:60] or "subtitles"
+    return Response(body, media_type="application/x-subrip" if fmt == "srt" else "text/vtt",
+                    headers={"Content-Disposition": f'attachment; filename="{name}.{fmt}"'})

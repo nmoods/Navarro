@@ -104,6 +104,7 @@ export const projectsApi = {
   produce: (id: string, quality: "draft" | "final") => api<Job>(`/projects/${id}/produce`, { method: "POST", body: { quality } }),
   exports: (id: string) => api<Export[]>(`/projects/${id}/exports`),
   jobs: (id: string) => api<Job[]>(`/projects/${id}/jobs`),
+  subtitles: (id: string, fmt: "srt" | "vtt") => blobUrl(`/projects/${id}/subtitles.${fmt}`),
 };
 
 export const scenesApi = {
