@@ -125,7 +125,7 @@ export default function EditorPage() {
 
       <div className="px-4 pt-3">
         <ProviderBanner />
-        {job && !isTerminal(job.status) && <div className="mb-3"><JobProgress job={job} /></div>}
+        {job && !isTerminal(job.status) && (noStoryboard || !scenes.length) && <div className="mb-3"><JobProgress job={job} /></div>}
         {p?.status === "failed" && p.last_error && !busy && <ErrorNotice error={new Error(p.last_error)} className="mb-3" />}
       </div>
 
@@ -153,7 +153,10 @@ export default function EditorPage() {
               </ScrollArea>
             </Tabs>
           </aside>
-          <section className="min-h-[420px] bg-[radial-gradient(70%_60%_at_50%_45%,rgba(91,63,217,0.09),transparent)]" aria-label="Monitor">
+          <section className="relative min-h-[420px] bg-[radial-gradient(70%_60%_at_50%_45%,rgba(91,63,217,0.09),transparent)]" aria-label="Monitor">
+            {job && !isTerminal(job.status) && scenes.length > 0 && (
+              <div className="absolute inset-x-4 top-3 z-10 shadow-lg shadow-black/40"><JobProgress job={job} compact /></div>
+            )}
             {scenes.length > 0 ? (
               <Monitor scenes={scenes} latest={latest} ratio={p?.settings?.aspect_ratio ?? "9:16"} stale={stale} />
             ) : (
