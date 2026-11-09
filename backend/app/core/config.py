@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 from enum import StrEnum
 from functools import lru_cache
 from pathlib import Path
@@ -65,7 +66,7 @@ class Settings(BaseSettings):
 
     llm_provider: str = "ollama"
     ollama_url: str = "http://127.0.0.1:11434"
-    ollama_model: str = "qwen3:4b"
+    ollama_model: str = "qwen3.5:4b"
     llm_timeout_seconds: float = 600.0
 
     image_provider: str = "auto"
@@ -77,6 +78,11 @@ class Settings(BaseSettings):
     comfyui_timeout_seconds: float = 600.0
 
     tts_provider: str = "kokoro"
+    kokoro_worker_python: Path = (
+        BACKEND_ROOT.parent / "ai-engine" / "tts-worker" / ".venv"
+        / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
+    )  # fmt: skip
+    kokoro_worker_script: Path = BACKEND_ROOT.parent / "ai-engine" / "tts-worker" / "kokoro_worker.py"
     kokoro_model_path: Path = BACKEND_ROOT.parent / ".runtime" / "models" / "kokoro" / "kokoro-v1.0.onnx"
     kokoro_voices_path: Path = BACKEND_ROOT.parent / ".runtime" / "models" / "kokoro" / "voices-v1.0.bin"
 

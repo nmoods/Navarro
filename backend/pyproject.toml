@@ -7,6 +7,7 @@ dependencies = [
     "alembic>=1.20.1",
     "argon2-cffi>=25.1.0",
     "fastapi[standard]>=0.162.2",
+    "faster-whisper>=1.2.1",
     "httpx>=0.28.1",
     "imageio-ffmpeg>=0.8.1",
     "numpy>=2.5.4",
@@ -38,7 +39,8 @@ markers = [
     "slow: renders real video frames (seconds)",
     "integration: requires live local AI services (Ollama, ComfyUI, Kokoro, Whisper)",
 ]
-addopts = "-m 'not integration'"
+addopts = "-m 'not integration' -p no:cacheprovider"
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.ruff]
 line-length = 110
