@@ -86,7 +86,7 @@ class R2Storage:
         except ImportError as exc:  # pragma: no cover - optional
             raise StorageError("Install boto3 to use the R2 storage backend") from exc
         if not (settings.r2_account_id and settings.r2_bucket and settings.r2_access_key_id and settings.r2_secret_access_key):
-            raise StorageError("R2 storage requires REELFORGE_R2_ACCOUNT_ID, _BUCKET, _ACCESS_KEY_ID, _SECRET_ACCESS_KEY")
+            raise StorageError("R2 storage requires NARRAVO_R2_ACCOUNT_ID, _BUCKET, _ACCESS_KEY_ID, _SECRET_ACCESS_KEY")
         self.bucket = settings.r2_bucket
         self.client = boto3.client(
             "s3",

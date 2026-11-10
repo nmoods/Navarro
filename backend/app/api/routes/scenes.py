@@ -18,7 +18,15 @@ from app.application.uploads import read_limited, validate_image
 from app.core.errors import ConflictError, NotFoundError, ValidationFailedError
 from app.domain.enums import ACTIVE_JOB_STATUSES, JobType
 from app.infrastructure.database.models import GenerationJob, MediaAsset, Project, Scene, SceneAsset
-from app.schemas.core import JobOut, RegenerateSceneIn, ReorderIn, SceneAssetOut, SceneCreate, SceneOut, SceneUpdate
+from app.schemas.core import (
+    JobOut,
+    RegenerateSceneIn,
+    ReorderIn,
+    SceneAssetOut,
+    SceneCreate,
+    SceneOut,
+    SceneUpdate,
+)
 from app.workers import queue
 
 router = APIRouter(tags=["scenes"])

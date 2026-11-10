@@ -19,11 +19,12 @@ from app.infrastructure.ai.ollama import OllamaProvider
 from app.infrastructure.audio.kokoro import KokoroProvider
 from app.infrastructure.audio.whisper import FasterWhisperProvider
 from app.infrastructure.images.comfyui import ComfyUIProvider
+from app.infrastructure.images.openvino import OpenVINOImageProvider
 from app.infrastructure.images.procedural import ProceduralImageProvider
 from app.infrastructure.research.wikipedia import WikipediaResearchProvider
 from app.infrastructure.testing import fixtures
 
-logger = logging.getLogger("reelforge.providers")
+logger = logging.getLogger("narravo.providers")
 
 
 @dataclass
@@ -35,10 +36,10 @@ class Providers:
     stt: TranscriptionProvider
     research: ResearchProvider | None
     auto_image: bool = False
-    _image_ok_cache: dict = field(default_factory=dict)
+    image_alternatives: list[ImageProvider] = field(default_factory=list)
 
     def all(self) -> list:
-        items = [self.llm, self.image, self.tts, self.stt]
+        items = [self.llm, self.image, *self.image_alternatives, self.tts, self.stt]
         if self.auto_image:
             items.append(self.image_fallback)
         if self.research:
@@ -55,11 +56,26 @@ class Providers:
                 out.append(ProviderHealth(provider.name, "unknown", False, f"health check error: {type(exc).__name__}"))
         return out
 
+    def warm_up(self) -> None:
+        """Load models that run inside this process (OpenVINO). Their loaders hold the GIL for seconds, so do
+        it before the API serves requests rather than in the middle of the first job."""
+        for provider in (self.image, *self.image_alternatives):
+            warm = getattr(provider, "warm_up", None)
+            if warm is not None and provider.health().available:
+                try:
+                    warm()
+                except Exception:  # a model that fails to load must not stop the API; the job reports it later
+                    logger.exception("warm-up failed for %s", provider.name)
+
     def image_for_generation(self) -> ImageProvider:
-        """In auto mode use ComfyUI when healthy, otherwise fall back to (clearly labelled) procedural art."""
+        """In auto mode use the first healthy AI provider (OpenVINO, then ComfyUI), otherwise fall back to
+        (clearly labelled) procedural art."""
         if not self.auto_image:
             return self.image
-        return self.image if self.image.health().available else self.image_fallback
+        for provider in (self.image, *self.image_alternatives):
+            if provider.health().available:
+                return provider
+        return self.image_fallback
 
 
 def build_providers(settings: Settings) -> Providers:
@@ -70,15 +86,22 @@ def build_providers(settings: Settings) -> Providers:
     )
     comfy = ComfyUIProvider(settings.comfyui_url, settings.comfyui_checkpoint, settings.comfyui_lcm_lora,
                             settings.comfyui_steps, settings.comfyui_cfg, settings.comfyui_timeout_seconds)  # fmt: skip
+    openvino = OpenVINOImageProvider(settings.openvino_model_dir, settings.openvino_device, settings.openvino_steps,
+                                     settings.openvino_guidance)  # fmt: skip
     procedural = ProceduralImageProvider()
     image: ImageProvider
+    alternatives: list[ImageProvider] = []
     match settings.image_provider:
         case "fixture":
             image = fixtures.FixtureImageProvider()
         case "procedural":
             image = procedural
-        case _:
+        case "comfyui":
             image = comfy
+        case "openvino":
+            image = openvino
+        case _:
+            image, alternatives = openvino, [comfy]
     tts: TTSProvider = (
         fixtures.FixtureTTS()
         if settings.tts_provider == "fixture"
@@ -96,7 +119,8 @@ def build_providers(settings: Settings) -> Providers:
             fixtures.FixtureResearch() if settings.llm_provider == "fixture"
             else WikipediaResearchProvider(settings.research_contact)
         )  # fmt: skip
-    return Providers(llm, image, procedural, tts, stt, research, auto_image=settings.image_provider == "auto")
+    return Providers(llm, image, procedural, tts, stt, research, auto_image=settings.image_provider == "auto",
+                     image_alternatives=alternatives)  # fmt: skip
 
 
 @lru_cache

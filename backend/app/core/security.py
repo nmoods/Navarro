@@ -21,7 +21,7 @@ from app.core.errors import AuthenticationError
 _hasher = PasswordHasher()
 ACCESS_TOKEN_TYPE = "access"  # noqa: S105 - token type label, not a secret
 JWT_ALGORITHM = "HS256"
-JWT_ISSUER = "reelforge"
+JWT_ISSUER = "narravo"
 
 
 def hash_password(password: str) -> str:

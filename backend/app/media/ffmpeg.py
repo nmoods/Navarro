@@ -12,7 +12,7 @@ from pathlib import Path
 
 import numpy as np
 
-logger = logging.getLogger("reelforge.ffmpeg")
+logger = logging.getLogger("narravo.ffmpeg")
 
 
 class FfmpegError(RuntimeError):

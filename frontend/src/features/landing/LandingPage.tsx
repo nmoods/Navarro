@@ -8,7 +8,7 @@ import { useAuth } from "@/stores/auth";
 
 const STEPS = [
   { title: "Give it a subject", body: "One line is enough: “The disappearance of the Roanoke colony.” Pick a length, a format and a voice." },
-  { title: "The Story Director writes", body: "It researches the topic, drafts six alternative hooks, writes narration to length and lists every factual claim it makes." },
+  { title: "The Story Director writes", body: "It reads up on the topic, drafts three alternative hooks, writes narration to length and checks its main factual claims against the source." },
   { title: "Every scene gets directed", body: "Each scene gets a visual type, a camera move, atmosphere, a transition, sound effects and a music cue that suits what is being said." },
   { title: "Voice, captions, render", body: "Kokoro voices the script, Whisper times every word, and the engine animates, mixes and exports an MP4." },
   { title: "Edit one scene, not the whole video", body: "Rewrite a line or swap an image and only that scene is rebuilt. Everything else is reused." },
@@ -29,14 +29,14 @@ const FEATURES = [
   { name: "Fact checker", body: "Claims are checked against encyclopedia sources and flagged as supported, contradicted or not found, with links." },
   { name: "Series Factory", body: "Plan ten connected episodes with a shared series bible, then produce them in a queue. One failure never stops the rest." },
   { name: "Runs on your machine", body: "Local models for writing, images, voice and transcription. No credits, no watermark, no upload of your ideas." },
-  { name: "Honest about quality", body: "When an AI service is offline, ReelForge tells you which one, falls back where it can and labels what it substituted." },
+  { name: "Honest about quality", body: "When an AI service is offline, NaRRAVO tells you which one, falls back where it can and labels what it substituted." },
 ];
 
 const FAQ = [
   { q: "Is it really free?", a: "There are no plans, credits or paywalls. It runs on open-source models on your own computer. If you host it online, the free tiers of those providers have storage and traffic limits; the docs list them." },
-  { q: "Do I need a graphics card?", a: "No. Everything runs on a CPU, slower. On an 8-core desktop CPU we measured about 6 minutes to write the story and storyboard, about 2 minutes per AI image, and under 4 minutes to voice, animate and encode a 45-second video. An NVIDIA GPU makes images take seconds instead." },
-  { q: "Can I publish the videos commercially?", a: "Generally yes. The voice (Kokoro) and language model (Qwen) are Apache-2.0. Images come from Stable Diffusion 1.5, whose OpenRAIL-M licence forbids certain harmful uses; you agree to those terms when you generate images. Music and sound effects are synthesised by ReelForge and are royalty-free." },
-  { q: "Will this make my videos go viral?", a: "Nobody can promise that. ReelForge helps you test hooks, pace the story and keep a consistent look, which is what you control." },
+  { q: "Do I need a graphics card?", a: "No. Everything runs on a CPU. On an 8-core desktop CPU without a graphics card, a 45-second video took about 8 minutes from idea to MP4, including research and fact checking: about 4 minutes of writing, under 2 minutes for images and voice, and 2 to 3 minutes to animate and encode. Re-exporting after an edit only rebuilds what changed, often in about a minute." },
+  { q: "Can I publish the videos commercially?", a: "Generally yes. The voice (Kokoro) and language model (Qwen) are Apache-2.0. Images come from LCM Dreamshaper, a model derived from Stable Diffusion 1.5, whose OpenRAIL-M licence forbids certain harmful uses; you agree to those terms when you generate images. Music and sound effects are synthesised by NaRRAVO and are royalty-free." },
+  { q: "Will this make my videos go viral?", a: "Nobody can promise that. NaRRAVO helps you test hooks, pace the story and keep a consistent look, which is what you control." },
   { q: "How accurate are the facts?", a: "The Story Director is told never to invent facts, and educational claims are checked against sources. Small local models still make mistakes, so review anything flagged before you publish." },
 ];
 
@@ -70,11 +70,11 @@ function HeroReel() {
           muted
           loop
           playsInline
-          aria-label="A short documentary about the lost Roanoke colony, made with ReelForge"
+          aria-label="A short documentary about the lost Roanoke colony, made with NaRRAVO"
         />
       </div>
       <figcaption className="mt-3 flex items-center justify-between gap-4 text-xs text-faint">
-        <span>Made with ReelForge, script edited by hand</span>
+        <span>Made with NaRRAVO, script edited by hand</span>
         <span className="timecode">{timecode(t)}</span>
       </figcaption>
     </motion.figure>
@@ -88,7 +88,7 @@ export default function LandingPage() {
     <div className="overflow-x-clip">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5 md:px-8">
         <span className="flex items-center gap-2 font-heading text-lg font-semibold">
-          <Clapperboard className="size-5 text-uv" aria-hidden /> ReelForge
+          <Clapperboard className="size-5 text-uv" aria-hidden /> NaRRAVO
         </span>
         <nav className="flex items-center gap-2" aria-label="Account">
           {signedIn ? (
@@ -107,7 +107,7 @@ export default function LandingPage() {
           <div>
             <h1 className="text-5xl font-semibold leading-[0.98] md:text-7xl">Turn any idea into a cinematic story.</h1>
             <p className="mt-6 max-w-[34rem] text-lg text-subtle">
-              ReelForge researches your subject, writes the narration, directs every scene, voices it and renders a finished
+              NaRRAVO researches your subject, writes the narration, directs every scene, voices it and renders a finished
               vertical video. It runs on your own computer, so there are no credits to run out.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
@@ -191,14 +191,14 @@ export default function LandingPage() {
           <div className="flex flex-wrap items-center justify-between gap-6 rounded-2xl border border-line bg-surface px-8 py-10">
             <div>
               <h2 className="text-2xl font-semibold">Your next video starts with a sentence.</h2>
-              <p className="mt-2 text-subtle">Create an account on this ReelForge installation to start.</p>
+              <p className="mt-2 text-subtle">Create an account on this NaRRAVO installation to start.</p>
             </div>
             <Button asChild size="lg"><Link to={signedIn ? "/create" : "/register"}>Start creating</Link></Button>
           </div>
         </section>
       </main>
       <footer className="border-t border-line px-4 py-8 text-center text-xs text-faint md:px-8">
-        ReelForge AI · Open-source software. Generated media is subject to the licences listed in the documentation.
+        NaRRAVO · Open-source software. Generated media is subject to the licences listed in the documentation.
       </footer>
     </div>
   );

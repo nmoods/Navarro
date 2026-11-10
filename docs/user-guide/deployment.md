@@ -18,28 +18,28 @@ why every model here runs on hardware you control.
 ## 1. Database (Supabase)
 
 1. Create a project; copy the **direct** connection string (port 5432).
-2. `REELFORGE_DATABASE_URL=postgresql+psycopg://postgres:<pw>@db.<ref>.supabase.co:5432/postgres`
+2. `NARRAVO_DATABASE_URL=postgresql+psycopg://postgres:<pw>@db.<ref>.supabase.co:5432/postgres`
 3. Run `uv run alembic upgrade head` from `backend/`.
 4. Apply Row Level Security: `psql "$DB_URL" -f infrastructure/supabase/rls.sql`.
-5. Optional Supabase Auth: set `REELFORGE_AUTH_MODE=supabase`, `REELFORGE_SUPABASE_URL`, and in the
+5. Optional Supabase Auth: set `NARRAVO_AUTH_MODE=supabase`, `NARRAVO_SUPABASE_URL`, and in the
    frontend `VITE_AUTH_MODE=supabase`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (public key only).
-   The API verifies tokens with the project's JWKS; the service-role key is never needed by ReelForge.
+   The API verifies tokens with the project's JWKS; the service-role key is never needed by NaRRAVO.
 
 ## 2. Media (Cloudflare R2)
 
 Create a private bucket and an API token scoped to it (Object Read & Write), then set
-`REELFORGE_STORAGE_BACKEND=r2`, `REELFORGE_R2_ACCOUNT_ID`, `REELFORGE_R2_BUCKET`,
-`REELFORGE_R2_ACCESS_KEY_ID`, `REELFORGE_R2_SECRET_ACCESS_KEY`, and `uv add boto3` in `backend/`. Media is
+`NARRAVO_STORAGE_BACKEND=r2`, `NARRAVO_R2_ACCOUNT_ID`, `NARRAVO_R2_BUCKET`,
+`NARRAVO_R2_ACCESS_KEY_ID`, `NARRAVO_R2_SECRET_ACCESS_KEY`, and `uv add boto3` in `backend/`. Media is
 served through short-lived presigned URLs; never make the bucket public.
 
 ## 3. API and worker
 
 ```bash
-REELFORGE_APP_ENV=production
-REELFORGE_JWT_SECRET=$(python -c "import secrets;print(secrets.token_urlsafe(48))")
-REELFORGE_PUBLIC_API_URL=https://api.example.com
-REELFORGE_CORS_ORIGINS=https://reelforge.pages.dev
-REELFORGE_EMBEDDED_WORKER=false
+NARRAVO_APP_ENV=production
+NARRAVO_JWT_SECRET=$(python -c "import secrets;print(secrets.token_urlsafe(48))")
+NARRAVO_PUBLIC_API_URL=https://api.example.com
+NARRAVO_CORS_ORIGINS=https://narravo.pages.dev
+NARRAVO_EMBEDDED_WORKER=false
 uv run uvicorn app.main:app --host 127.0.0.1 --port 8010 --proxy-headers   # behind Caddy/nginx with TLS
 uv run python -m app.workers.runner                                      # on the AI machine
 ```

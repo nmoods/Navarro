@@ -16,7 +16,14 @@ from app.api.presenters import media_url
 from app.application.assets import hash_inputs
 from app.core.errors import ConflictError, NotFoundError, ValidationFailedError
 from app.domain.enums import MusicMood, SoundEffect
-from app.infrastructure.database.models import MediaAsset, MusicTrack, Project, StoryDnaProfile, Template, VoiceProfile
+from app.infrastructure.database.models import (
+    MediaAsset,
+    MusicTrack,
+    Project,
+    StoryDnaProfile,
+    Template,
+    VoiceProfile,
+)
 from app.media.audio.music import generate_music
 from app.media.audio.sfx import generate_sfx
 from app.media.audio.synth import SR
@@ -165,7 +172,7 @@ def delete_template(template_id: uuid.UUID, session: DbSession, user: CurrentUse
 @router.get("/music", response_model=list[MusicTrackOut])
 def music_tracks(session: DbSession, settings: SettingsDep, storage: StorageDep, user: CurrentUser) -> list[MusicTrackOut]:
     builtin = [MusicTrackOut(id=None, name=f"{m.value.title()} score", mood=m.value, source="procedural",
-                             license_note="Generated locally by ReelForge; royalty-free", preview_url=None)
+                             license_note="Generated locally by NaRRAVO; royalty-free", preview_url=None)
                for m in MusicMood if m is not MusicMood.NONE]  # fmt: skip
     uploads = []
     for track in session.scalars(select(MusicTrack).where(MusicTrack.user_id == user.id).order_by(MusicTrack.created_at.desc())):

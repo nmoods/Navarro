@@ -23,4 +23,4 @@ if (Test-Path "$comfy\.venv\Scripts\python.exe") {
     Start-Process -FilePath "$comfy\.venv\Scripts\python.exe" -ArgumentList $comfyArgs -WorkingDirectory $comfy -WindowStyle Hidden `
         -RedirectStandardOutput "$Logs\comfyui.out.log" -RedirectStandardError "$Logs\comfyui.err.log"
     Write-Host "ComfyUI  -> http://127.0.0.1:8188 ($(if ($gpu) {'GPU'} else {'CPU'}) mode)"
-} else { Write-Warning "ComfyUI not installed (run setup-ai.ps1)" }
+} else { Write-Host "ComfyUI  -> not installed (optional; images use OpenVINO on the CPU)" }

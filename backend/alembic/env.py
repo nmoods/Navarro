@@ -1,4 +1,4 @@
-"""Alembic environment: URL comes from ReelForge settings, metadata from the ORM models."""
+"""Alembic environment: URL comes from NaRRAVO settings, metadata from the ORM models."""
 
 from __future__ import annotations
 

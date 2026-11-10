@@ -24,7 +24,7 @@ function Wordmark() {
   return (
     <span className="flex items-center gap-2 font-heading text-lg font-semibold tracking-tight">
       <Clapperboard className="size-5 text-uv" aria-hidden />
-      ReelForge
+      NaRRAVO
     </span>
   );
 }

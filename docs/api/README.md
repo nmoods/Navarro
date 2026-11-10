@@ -12,7 +12,7 @@ Errors always have the shape `{"error": {"code": "...", "message": "...", "detai
 | Area | Method & path | Notes |
 |---|---|---|
 | Auth | `POST /auth/register` `POST /auth/login` | returns access token, sets refresh cookie |
-| | `POST /auth/refresh` `POST /auth/logout` | cookie + `X-Requested-With: reelforge` |
+| | `POST /auth/refresh` `POST /auth/logout` | cookie + `X-Requested-With: narravo` |
 | | `GET /auth/me` | |
 | Projects | `GET /projects?q&status&limit&offset` `POST /projects` | create enqueues a `story` (or `production` with `auto_produce`) job |
 | | `GET/PATCH/DELETE /projects/{id}` | PATCH merges caption/music settings |

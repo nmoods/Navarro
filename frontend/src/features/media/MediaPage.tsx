@@ -42,7 +42,7 @@ export default function MediaPage() {
     <Page wide>
       <PageHeader
         title="Media library"
-        description="Everything ReelForge generated for you, plus your own images and music. Files are private to your account."
+        description="Everything NaRRAVO generated for you, plus your own images and music. Files are private to your account."
         actions={
           <>
             <input ref={imageInput} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(e) => e.target.files?.[0] && upload.mutate({ file: e.target.files[0], purpose: "image" })} />

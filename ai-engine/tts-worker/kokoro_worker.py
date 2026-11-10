@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""ReelForge Kokoro TTS worker.
+"""NaRRAVO Kokoro TTS worker.
 
 Runs as a separate process so the GPL-3.0 phonemizer/espeak-ng dependency chain stays isolated from the
-(permissively licensed) ReelForge backend. Protocol: one JSON object per line on stdin, one JSON response
+(permissively licensed) NaRRAVO backend. Protocol: one JSON object per line on stdin, one JSON response
 per line on stdout.
 
   {"op": "ping"}

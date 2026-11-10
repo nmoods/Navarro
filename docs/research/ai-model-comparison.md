@@ -1,4 +1,4 @@
-# ReelForge AI — AI Model Comparison (CPU-first)
+# NaRRAVO — AI Model Comparison (CPU-first)
 
 - Research date: 2026-11-09
 - Target: i7-10700 (8C/16T, AVX2, **no AVX-512/VNNI**), 32 GB DDR4-2933 dual channel (about 47 GB/s theoretical), UHD 630 iGPU, no CUDA

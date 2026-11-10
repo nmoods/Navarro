@@ -81,18 +81,21 @@ def assemble(
     if audio_path:
         args += ["-i", audio_path]
     fps = settings.fps
-    graph = [f"[{i}:v]settb=AVTB,fps={fps},format=yuv420p,setsar=1[s{i}]" for i in range(len(clips))]
+    # Every link must share one timebase: xfade refuses inputs whose timebases differ, and concat does not
+    # preserve its inputs' timebase, so a crossfade right after a hard cut would fail without the settb.
+    tb = f"settb=1/{fps}"
+    graph = [f"[{i}:v]fps={fps},{tb},format=yuv420p,setsar=1[s{i}]" for i in range(len(clips))]
     current, length = "s0", timings[0].duration
     for i in range(1, len(clips)):
         out = f"v{i}"
         name = transitions[i]
         trans = timings[i].transition_in
         if name == "cut" or trans <= 0 or name not in XFADE_NAMES:
-            graph.append(f"[{current}][s{i}]concat=n=2:v=1:a=0[{out}]")
+            graph.append(f"[{current}][s{i}]concat=n=2:v=1:a=0,{tb}[{out}]")
             length += timings[i].duration
         else:
             offset = max(0.0, length - trans)
-            graph.append(f"[{current}][s{i}]xfade=transition={XFADE_NAMES[name]}:duration={trans:.3f}:offset={offset:.3f}[{out}]")
+            graph.append(f"[{current}][s{i}]xfade=transition={XFADE_NAMES[name]}:duration={trans:.3f}:offset={offset:.3f},{tb}[{out}]")
             length = offset + timings[i].duration
         current = out
     args += ["-filter_complex", ";".join(graph), "-map", f"[{current}]"]

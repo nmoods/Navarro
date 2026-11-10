@@ -18,8 +18,8 @@ def _email() -> str:
 # ---- authentication ------------------------------------------------------------------------------------
 def test_concurrent_refresh_within_grace_window_is_not_theft(client) -> None:  # type: ignore[no-untyped-def]
     register(client, _email())
-    cookie = client.cookies.get("rf_refresh")
-    hdr = {"X-Requested-With": "reelforge", "Cookie": f"rf_refresh={cookie}"}
+    cookie = client.cookies.get("nv_refresh")
+    hdr = {"X-Requested-With": "narravo", "Cookie": f"nv_refresh={cookie}"}
     client.cookies.clear()
     first = client.post("/api/v1/auth/refresh", headers=hdr)
     client.cookies.clear()
@@ -38,19 +38,19 @@ def test_register_login_refresh_rotation_and_reuse_detection(client, monkeypatch
 
     login = client.post("/api/v1/auth/login", json={"email": email, "password": "Sup3r-secret-pass"})
     assert login.status_code == 200
-    old_cookie = client.cookies.get("rf_refresh")
+    old_cookie = client.cookies.get("nv_refresh")
     assert client.post("/api/v1/auth/refresh").status_code == 403  # CSRF header required
-    refreshed = client.post("/api/v1/auth/refresh", headers={"X-Requested-With": "reelforge"})
+    refreshed = client.post("/api/v1/auth/refresh", headers={"X-Requested-With": "narravo"})
     assert refreshed.status_code == 200 and refreshed.json()["access_token"]
     # replaying the rotated (old) refresh token revokes the whole token family
-    new_cookie = client.cookies.get("rf_refresh")
+    new_cookie = client.cookies.get("nv_refresh")
     assert new_cookie and new_cookie != old_cookie
     client.cookies.clear()
-    replay = client.post("/api/v1/auth/refresh", headers={"X-Requested-With": "reelforge", "Cookie": f"rf_refresh={old_cookie}"})
+    replay = client.post("/api/v1/auth/refresh", headers={"X-Requested-With": "narravo", "Cookie": f"nv_refresh={old_cookie}"})
     assert replay.status_code == 401
     # ...and the legitimately rotated token is now revoked too (family revocation)
     client.cookies.clear()
-    after = client.post("/api/v1/auth/refresh", headers={"X-Requested-With": "reelforge", "Cookie": f"rf_refresh={new_cookie}"})
+    after = client.post("/api/v1/auth/refresh", headers={"X-Requested-With": "narravo", "Cookie": f"nv_refresh={new_cookie}"})
     assert after.status_code == 401
 
 
@@ -107,7 +107,16 @@ def test_create_edit_regenerate_render_download(client, worker) -> None:  # type
     scenes = board["scenes"]
     assert len(scenes) >= 3 and board["analysis"]["total_words"] > 0
     script = client.get(f"/api/v1/projects/{project['id']}/script", headers=h).json()
-    assert len(script["hooks"]) == 6 and script["claims"]
+    assert len(script["hooks"]) == 3 and script["claims"]
+    assert script["full_text"].startswith(script["hooks"][0]["text"])
+
+    # Hook Lab: the picked line opens the rewritten script verbatim
+    picked = script["hooks"][2]["text"]
+    assert client.post(f"/api/v1/projects/{project['id']}/hooks/select", json={"hook_index": 2}, headers=h).status_code == 202
+    drain(worker)
+    script = client.get(f"/api/v1/projects/{project['id']}/script", headers=h).json()
+    assert script["hooks"][0]["text"] == picked and script["full_text"].startswith(picked)
+    scenes = client.get(f"/api/v1/projects/{project['id']}/storyboard", headers=h).json()["scenes"]
 
     # edit + add + reorder + delete
     edit = client.patch(f"/api/v1/scenes/{scenes[1]['id']}", json={"narration": "A brand new line.", "camera_movement": "crash_zoom",

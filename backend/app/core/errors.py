@@ -8,7 +8,7 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-logger = logging.getLogger("reelforge.errors")
+logger = logging.getLogger("narravo.errors")
 
 
 class AppError(Exception):

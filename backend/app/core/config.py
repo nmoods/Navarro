@@ -1,4 +1,4 @@
-"""Application settings, loaded from environment variables (prefix ``REELFORGE_``) and ``.env``."""
+"""Application settings, loaded from environment variables (prefix ``NARRAVO_``) and ``.env``."""
 
 from __future__ import annotations
 
@@ -32,17 +32,17 @@ class StorageBackendKind(StrEnum):
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_prefix="REELFORGE_",
+        env_prefix="NARRAVO_",
         env_file=(BACKEND_ROOT.parent / ".env", BACKEND_ROOT / ".env"),
         extra="ignore",
     )
 
     app_env: AppEnv = AppEnv.DEVELOPMENT
-    app_name: str = "ReelForge AI"
+    app_name: str = "NaRRAVO"
     public_api_url: str = "http://127.0.0.1:8010"
     log_level: str = "INFO"
 
-    database_url: str = f"sqlite:///{(BACKEND_ROOT / 'var' / 'reelforge.db').as_posix()}"
+    database_url: str = f"sqlite:///{(BACKEND_ROOT / 'var' / 'narravo.db').as_posix()}"
 
     auth_mode: AuthMode = AuthMode.LOCAL
     jwt_secret: SecretStr = SecretStr("dev-only-insecure-secret-change-me-0123456789")
@@ -69,7 +69,13 @@ class Settings(BaseSettings):
     ollama_model: str = "qwen3.5:4b"
     llm_timeout_seconds: float = 600.0
 
+    # auto = OpenVINO (fast, in-process) -> ComfyUI -> procedural art; or force one of openvino | comfyui |
+    # procedural | fixture.
     image_provider: str = "auto"
+    openvino_model_dir: Path = BACKEND_ROOT.parent / ".runtime" / "models" / "openvino" / "lcm-dreamshaper-v7-taesd"
+    openvino_device: str = "CPU"
+    openvino_steps: int = 4
+    openvino_guidance: float = 8.0
     comfyui_url: str = "http://127.0.0.1:8188"
     comfyui_checkpoint: str = "v1-5-pruned-emaonly.safetensors"
     comfyui_lcm_lora: str | None = "lcm-lora-sdv1-5.safetensors"
@@ -121,13 +127,13 @@ class Settings(BaseSettings):
         if self.app_env is AppEnv.PRODUCTION:
             secret = self.jwt_secret.get_secret_value()
             if secret.startswith("dev-only") or len(secret) < 32:
-                raise ValueError("REELFORGE_JWT_SECRET must be set to a random value of 32+ characters")
+                raise ValueError("NARRAVO_JWT_SECRET must be set to a random value of 32+ characters")
             if any(p.startswith("fixture") for p in (self.llm_provider, self.image_provider, self.tts_provider)):
                 raise ValueError("Fixture (test) providers cannot be used in production")
             if "*" in self.cors_origins:
                 raise ValueError("Wildcard CORS origins are not allowed in production")
         if self.auth_mode is AuthMode.SUPABASE and not self.supabase_url:
-            raise ValueError("REELFORGE_SUPABASE_URL is required when auth_mode=supabase")
+            raise ValueError("NARRAVO_SUPABASE_URL is required when auth_mode=supabase")
         return self
 
     @property

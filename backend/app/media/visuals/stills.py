@@ -13,7 +13,7 @@ from app.media.color import cover_resize, gradient_canvas, palette_bgr
 from app.media.effects import fractal_noise
 from app.media.fonts import load_font
 from app.media.spec import SceneSpec
-from app.media.visuals.common import bgr_to_hex, draw_text, ease, mix, wrap
+from app.media.visuals.common import bgr_to_hex, draw_text, ease, mix
 
 
 def fit_lines(text: str, family: str, weight: int, max_width: int, px: int, max_lines: int = 3) -> tuple[int, list[str]]:

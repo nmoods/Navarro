@@ -56,7 +56,7 @@ async function toError(res: Response): Promise<ApiError> {
 }
 
 async function send(path: string, opts: RequestOptions, token: string | null): Promise<Response> {
-  const headers: Record<string, string> = { "X-Requested-With": "reelforge" };
+  const headers: Record<string, string> = { "X-Requested-With": "narravo" };
   if (token) headers.Authorization = `Bearer ${token}`;
   let body: BodyInit | undefined;
   if (opts.form) body = opts.form;
@@ -102,6 +102,6 @@ export async function blobUrl(path: string, opts: RequestOptions = {}): Promise<
 
 export function errorMessage(error: unknown): string {
   if (error instanceof ApiError) return error.message;
-  if (error instanceof TypeError) return "Can't reach the ReelForge API. Check that the backend is running.";
+  if (error instanceof TypeError) return "Can't reach the NaRRAVO API. Check that the backend is running.";
   return error instanceof Error ? error.message : "Something went wrong";
 }

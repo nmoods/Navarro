@@ -6,7 +6,7 @@ import type { Export, Scene } from "@/types/api";
 import { planTimeline, useEditor } from "./editorStore";
 
 const SOURCE_NOTE: Record<string, string> = {
-  procedural: "Procedural art. ComfyUI was offline when this was made.",
+  procedural: "Procedural art. No AI image engine was available when this was made.",
   uploaded: "Your image, pinned to this scene.",
   fixture: "Test-mode image.",
 };

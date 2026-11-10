@@ -1,5 +1,5 @@
 [project]
-name = "reelforge-tts-worker"
+name = "narravo-tts-worker"
 version = "0.1.0"
 description = "Isolated Kokoro TTS worker (GPL-3.0 because of espeak-ng/phonemizer)"
 license = "GPL-3.0-or-later"

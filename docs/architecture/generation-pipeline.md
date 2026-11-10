@@ -24,14 +24,14 @@ Provider-unavailable errors fail immediately with an actionable message.
 |---|---|---|
 | 1 | Validate request (Pydantic, ownership, per-user active-job and hourly limits) | `api/routes/projects.py`, `workers/queue.enqueue` |
 | 2 | Research: Wikipedia search + extract used as reference material | `StoryDirector.gather_reference` |
-| 3 | Story brief (audience, angle, arc, key facts with confidence) | `StoryDirector.generate_brief` |
-| 4 | Hook Lab: six hooks, one per style | `generate_hooks` |
-| 5 | Script to a word budget (2.45 words/s), revision pass if far off | `generate_script` |
-| 6 | Fact check: each claim → search → extract → LLM verdict + source URL | `fact_check` |
+| 3 | Story in one pass: angle, music mood, three hooks (first in the preferred or Hook-Lab-chosen style), narration in three sections sized to the word budget (2.45 words/s), up to 3 claims; one revision if far off length | `StoryDirector.write_story` |
+| 4 | (merged into 3: there is no separate brief or hooks call, which saves two LLM round trips) | — |
+| 5 | (merged into 3) | — |
+| 6 | Fact check: up to 3 claims → search → extract → LLM verdict + source URL | `fact_check` |
 | 7 | Deterministic split into 4–12 scenes at sentence boundaries | `narrative.split_into_scenes` |
-| 8 | Storyboard: visual type, camera, effects, transition, SFX, music cue, palette, visual data per scene; narration enforced verbatim | `generate_storyboard`, `enforce_narration` |
+| 8 | Storyboard: visual type, image prompt, camera, effects, transition, SFX, music cue, visual data per scene. The model never echoes narration; it is attached from step 7 | `generate_storyboard`, `attach_narration` |
 | 9 | Pacing analysis (density, repetition, hook strength) stored on the storyboard | `narrative.analyse` |
-| 10 | Images through ComfyUI (or procedural art when offline in `auto` mode), cached by input hash | `ProductionService.ensure_image` |
+| 10 | Images through OpenVINO (LCM Dreamshaper v7 INT8 + TAESD, 4 steps), else ComfyUI, else procedural art (`auto` mode); cached by what the image shows (prompt, size, seed), so switching engines never redraws unchanged scenes | `ProductionService.ensure_image` |
 | 11 | Voiceover per scene through Kokoro, cached by (voice, speed, language, text) | `ensure_narration` |
 | 12 | Word timestamps with faster-whisper, aligned back onto the exact script tokens | `ensure_transcript`, `align_to_script` |
 | 13 | Timeline plan: clip lengths and offsets so narration never overlaps across transitions | `media/assembler.plan_timeline` |
@@ -70,14 +70,27 @@ each job and by the hourly maintenance pass.
 
 ## Performance (measured on the dev machine: i7-10700, 8 cores, no GPU)
 
-| Operation | Time |
+Real one-click run on 2026-11-10 (“Why the Mary Celeste was found empty”, 45 s target, 6 scenes, 3 AI images):
+
+| Step | Time |
 |---|---|
+| Wikipedia research + one-pass story (`qwen3.5:4b`, ~450 output tokens) | 70 s |
+| Fact check, 3 claims | 55 s |
+| Storyboard (~700 output tokens) | 97 s |
+| Images (OpenVINO LCM Dreamshaper INT8 + TAESD, 4 steps, 512×768, ≈21 s each) + voice + word timing | 107 s |
+| Animation of 6 scenes at 1080×1920 (process pool) | 70 s |
+| Music, mix, assembly, encode, thumbnail | 86 s (assembly now uses all cores: ≈40 s less) |
+| **Total, idea to 47.6 s MP4** | **8 min 5 s** |
+
+Previously (2026-11-09, four LLM calls and ComfyUI `--cpu`): 11.9 min without research. Re-exporting a
+project whose images, voices and clips are cached: under a minute.
+
+| Component benchmark | Time |
+|---|---|
+| OpenVINO pipeline load (once, at API start-up) | 9–11 s |
+| OpenVINO image, 512×768, 4 steps: full VAE decoder / TAESD decoder | 34 s / 21 s |
+| SD 1.5 + LCM-LoRA, 6 steps, ComfyUI `--cpu` | ≈125 s |
 | Kokoro TTS | 12.7 s of speech in 4.2 s (≈3× real time) |
 | faster-whisper `base.en` int8 | ≈2.5 s for a 13 s clip |
 | Scene render 1080×1920, parallax + fog + dust + captions | ≈66 ms/frame |
-| Procedural visuals (map, timeline, charts) at 540×960 draft | 17–31 ms/frame |
-| Music + SFX mix for 44 s | 2.5 s |
-| Final assembly with 8 transitions (44 s, draft) | 5.8 s |
-| Story Director with `qwen3.5:4b` (brief 91 s, hooks 53 s, script 40 s, storyboard 180 s) | ≈6 min |
-| SD 1.5 + LCM-LoRA image, 6 steps, 512×896, ComfyUI `--cpu` | ≈125 s each |
-| Full real production of a 7-scene, ~45 s video (4 AI images, voice, captions, render, final encode) | 11.9 min |
+| Final assembly of 47.6 s, x264 medium: 4 threads / all threads | 82 s / 44 s |

@@ -1,4 +1,4 @@
-# Product Opportunities — ReelForge AI (Phase Zero)
+# Product Opportunities — NaRRAVO (Phase Zero)
 
 - **Research date:** 2026-11-09.
 - **Evidence references** point to `competitor-analysis.md`, which holds the full quotes and URLs.
@@ -24,7 +24,7 @@ These are planning estimates. They must be benchmarked in Phase 1, and the model
 | 🟡 | Feasible but slow; needs a background queue | Quantised 3–8B local LLM via llama.cpp/Ollama, few-step distilled image models at ≤768 px |
 | 🔴 | Impractical on CPU | Generative video models, large diffusion models at high resolution |
 
-ReelForge must not depend on 🔴 workloads.
+NaRRAVO must not depend on 🔴 workloads.
 
 ---
 
@@ -59,7 +59,7 @@ ReelForge must not depend on 🔴 workloads.
 
 ### O4. Originality guard against YouTube's "inauthentic content" policy
 - **Problem:** YouTube's July 2025 policy targets "AI-generated content made with generic or unoriginal templates giving the impression of mass production". Faceless channels report demonetisation risk.
-- **Feature:** Before export, ReelForge scores each episode against the creator's own past episodes:
+- **Feature:** Before export, NaRRAVO scores each episode against the creator's own past episodes:
   - Template repetition, structure sameness and caption/visual/motion reuse.
   - Whether the episode has narrative or commentary or is just list filler.
   - It suggests variation, such as a different hook archetype, visual type or pacing.
@@ -101,7 +101,7 @@ ReelForge must not depend on 🔴 workloads.
 
 ### O8. Creative brief by clarifying questions
 - **Problem:** Prompt-to-video tools guess intent. invideo "never understood my commands".
-- **Feature:** Before the script, ReelForge asks 3–5 quick questions: audience, tone, goal, length, must-include facts. This is the pattern Animaker verifiably uses. The answers are saved into Story DNA.
+- **Feature:** Before the script, NaRRAVO asks 3–5 quick questions: audience, tone, goal, length, must-include facts. This is the pattern Animaker verifiably uses. The answers are saved into Story DNA.
 - **Value:** A better first draft and fewer re-rolls.
 - **CPU:** 🟡 for LLM-generated questions. A templated fallback is 🟢.
 - **Differentiation:** Animaker does this for explainers. No faceless short tool verifiably does.

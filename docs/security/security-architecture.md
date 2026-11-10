@@ -12,7 +12,7 @@ Controls are listed with the code that implements them so they can be audited an
 | Access tokens | HS256 JWT, 15 min, `iss`/`typ`/`exp` required, kept **in memory** in the SPA (never localStorage) |
 | Refresh tokens | 48-byte random, stored as SHA-256, httpOnly + SameSite=Strict + Secure (prod) cookie scoped to `/api/v1/auth` |
 | Rotation & theft detection | Each refresh revokes the old token; reuse of a revoked token revokes the whole family — tested |
-| CSRF | Cookie endpoints require `X-Requested-With: reelforge` (not sendable cross-site without a CORS preflight, which CORS rejects for unknown origins) + SameSite=Strict |
+| CSRF | Cookie endpoints require `X-Requested-With: narravo` (not sendable cross-site without a CORS preflight, which CORS rejects for unknown origins) + SameSite=Strict |
 | Supabase mode | JWTs verified with the project JWKS (RS256/ES256), audience and issuer checked; users mapped by `sub` |
 | Production guard | Startup refuses weak/default `JWT_SECRET`, wildcard CORS and test-double providers |
 

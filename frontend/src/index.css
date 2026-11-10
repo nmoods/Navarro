@@ -9,7 +9,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * ReelForge tokens. Projection-room black tinted violet; ultraviolet = action, projector blue = time/progress.
+ * NaRRAVO tokens. Projection-room black tinted violet; ultraviolet = action, projector blue = time/progress.
  * The app is dark-only by design (an edit bay), so light tokens are intentionally the same values.
  */
 @theme inline {

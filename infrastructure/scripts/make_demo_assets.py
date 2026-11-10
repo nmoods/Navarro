@@ -1,4 +1,4 @@
-"""Copy a finished ReelForge export into the landing page (frontend/public/demo).
+"""Copy a finished NaRRAVO export into the landing page (frontend/public/demo).
 
 Usage (from backend/):  uv run python ../infrastructure/scripts/make_demo_assets.py <project_id>
 

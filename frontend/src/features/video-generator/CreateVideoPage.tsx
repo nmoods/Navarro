@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { ChevronDown, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -35,10 +36,20 @@ export const createSchema = z.object({
 });
 export type CreateForm = z.infer<typeof createSchema>;
 
-const STEPS = ["Story", "Look", "Voice and sound", "Review"] as const;
-const PLATFORM_RATIO: Record<string, CreateForm["aspect_ratio"]> = {
-  tiktok: "9:16", instagram_reels: "9:16", youtube_shorts: "9:16", youtube: "16:9", generic: "9:16",
-};
+/** Real, documented subjects: one click fills the idea box. */
+export const EXAMPLE_TOPICS = [
+  "The lost colony of Roanoke",
+  "Why the Mary Celeste was found empty",
+  "The Tunguska explosion of 1908",
+  "How Venice was built on water",
+  "The Great Emu War of 1932",
+] as const;
+
+const FORMATS: { value: CreateForm["aspect_ratio"]; name: string; where: string; platform: string }[] = [
+  { value: "9:16", name: "Vertical", where: "TikTok, Reels, Shorts", platform: "generic" },
+  { value: "16:9", name: "Landscape", where: "YouTube", platform: "youtube" },
+  { value: "1:1", name: "Square", where: "Feeds", platform: "generic" },
+];
 
 function Choice({ value, current, onSelect, children }: { value: string | number; current: string | number; onSelect: () => void; children: React.ReactNode }) {
   return (
@@ -68,16 +79,16 @@ function SelectField({ value, onChange, items, id }: { value: string; onChange: 
 export default function CreateVideoPage() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const [step, setStep] = useState(0);
+  const [moreOpen, setMoreOpen] = useState(false);
   const options = useOptions();
-  const voices = useQuery({ queryKey: keys.voices, queryFn: creativeApi.voices });
+  const voices = useQuery({ queryKey: keys.voices, queryFn: creativeApi.voices, enabled: moreOpen });
   const dna = useQuery({ queryKey: keys.dna, queryFn: creativeApi.dna });
-  const templates = useQuery({ queryKey: keys.templates, queryFn: creativeApi.templates });
+  const templates = useQuery({ queryKey: keys.templates, queryFn: creativeApi.templates, enabled: params.has("template") });
 
   const form = useForm<CreateForm>({
     resolver: zodResolver(createSchema),
     defaultValues: {
-      topic: params.get("topic") ?? "", language: "en", duration_seconds: 60, aspect_ratio: "9:16", platform: "tiktok",
+      topic: params.get("topic") ?? "", language: "en", duration_seconds: 45, aspect_ratio: "9:16", platform: "generic",
       visual_style: "cinematic_documentary", story_tone: "documentary", voice_id: "am_michael", voice_speed: 1,
       caption_animation: "karaoke", story_dna_id: null, music_mood: "auto", sfx_enabled: true, fact_check_enabled: true,
     },
@@ -113,7 +124,7 @@ export default function CreateVideoPage() {
   const create = useMutation({
     mutationFn: (autoProduce: boolean) =>
       projectsApi.create({
-        topic: v.topic, language: v.language, duration_seconds: v.duration_seconds, aspect_ratio: v.aspect_ratio,
+        topic: v.topic.trim(), language: v.language, duration_seconds: v.duration_seconds, aspect_ratio: v.aspect_ratio,
         platform: v.platform, visual_style: v.visual_style, story_tone: v.story_tone, voice_id: v.voice_id,
         voice_speed: v.voice_speed, caption_style: { animation: v.caption_animation as never },
         music: v.music_mood === "auto" ? { enabled: true } : v.music_mood === "none" ? { enabled: false } : { enabled: true, mood: v.music_mood },
@@ -122,168 +133,159 @@ export default function CreateVideoPage() {
     onSuccess: (project) => navigate(`/projects/${project.id}`),
   });
 
-  const next = async () => {
-    if (step === 0 && !(await form.trigger("topic"))) return;
-    setStep((s) => Math.min(s + 1, STEPS.length - 1));
+  const start = async (autoProduce: boolean) => {
+    if (!(await form.trigger("topic"))) return;
+    create.mutate(autoProduce);
   };
   const o = options.data;
   const opts = (values: string[] | undefined) => (values ?? []).map((x) => ({ value: x, label: label(x) }));
 
   return (
     <Page>
-      <PageHeader title="New video" description="Describe a subject. You review the storyboard before anything is rendered." />
+      <PageHeader title="New video" description="Describe your idea. NaRRAVO writes the narration, draws every scene, records the voice and edits the video. You can change anything afterwards." />
       <ProviderBanner />
-      <ol className="mb-8 flex flex-wrap gap-2" aria-label="Steps">
-        {STEPS.map((name, i) => (
-          <li key={name}>
-            <button
-              type="button"
-              onClick={() => i <= step && setStep(i)}
-              className={cn("rounded-full border px-3 py-1 text-sm", i === step ? "border-uv text-text" : i < step ? "border-line text-subtle" : "border-line text-faint")}
-              aria-current={i === step ? "step" : undefined}
-            >
-              {i + 1}. {name}
-            </button>
-          </li>
-        ))}
-      </ol>
 
-      <form onSubmit={(e) => e.preventDefault()} className="grid max-w-3xl gap-8">
-        {step === 0 && (
-          <>
-            <Field label="What is the video about?" htmlFor="topic" error={form.formState.errors.topic?.message} hint="Be specific. “Why the Mary Celeste was found abandoned” beats “ships”.">
-              <Textarea id="topic" rows={3} placeholder="The mysterious disappearance of the Roanoke colony" aria-invalid={!!form.formState.errors.topic} {...form.register("topic")} />
-            </Field>
-            <Field label="Length">
-              <div className="flex flex-wrap gap-2">
-                {(o?.durations ?? [30, 45, 60, 90]).map((d) => (
-                  <Choice key={d} value={d} current={v.duration_seconds} onSelect={() => form.setValue("duration_seconds", d)}>{d} seconds</Choice>
-                ))}
-              </div>
-            </Field>
-            <div className="grid gap-6 sm:grid-cols-2">
-              <Field label="Story tone" htmlFor="tone">
-                <SelectField id="tone" value={v.story_tone} onChange={(x) => form.setValue("story_tone", x)} items={opts(o?.story_tones)} />
-              </Field>
-              <Field label="Language" htmlFor="language" hint="Narration language. Voices are matched to it.">
-                <SelectField id="language" value={v.language} onChange={(x) => form.setValue("language", x)} items={(o?.languages ?? []).map((l) => ({ value: l.code, label: l.name }))} />
-              </Field>
+      <form onSubmit={(e) => { e.preventDefault(); void start(true); }} className="grid max-w-3xl gap-8">
+        <Field label="What is the video about?" htmlFor="topic" error={form.formState.errors.topic?.message}>
+          <Textarea
+            id="topic"
+            rows={3}
+            autoFocus
+            placeholder="The mysterious disappearance of the Roanoke colony"
+            aria-invalid={!!form.formState.errors.topic}
+            className="text-base"
+            {...form.register("topic")}
+          />
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+            <span className="text-faint">Try:</span>
+            {EXAMPLE_TOPICS.map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => form.setValue("topic", t, { shouldValidate: true })}
+                className="rounded-full border border-line px-3 py-1 text-subtle hover:border-line-strong hover:text-text"
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+        </Field>
+
+        <div className="grid gap-8 sm:grid-cols-2">
+          <Field label="Length">
+            <div className="flex flex-wrap gap-2">
+              {(o?.durations ?? [30, 45, 60, 90]).map((d) => (
+                <Choice key={d} value={d} current={v.duration_seconds} onSelect={() => form.setValue("duration_seconds", d)}>{d} s</Choice>
+              ))}
             </div>
-            <label className="flex items-start gap-3 text-sm">
-              <Controller control={form.control} name="fact_check_enabled" render={({ field }) => <Switch checked={field.value} onCheckedChange={field.onChange} aria-label="Fact check" />} />
-              <span><span className="text-text">Check facts against sources</span><br /><span className="text-faint">Uses Wikipedia to verify claims in educational and historical scripts.</span></span>
-            </label>
-          </>
-        )}
-
-        {step === 1 && (
-          <>
-            {dna.data && dna.data.length > 0 && (
-              <Field label="Story DNA" hint="Applies a saved channel identity: style, voice, captions and music.">
-                <div className="flex flex-wrap gap-2">
-                  <Choice value="none" current={v.story_dna_id ?? "none"} onSelect={() => applyDna(null)}>None</Choice>
-                  {dna.data.map((d) => <Choice key={d.id} value={d.id} current={v.story_dna_id ?? "none"} onSelect={() => applyDna(d.id)}>{d.name}</Choice>)}
-                </div>
-              </Field>
-            )}
-            <Field label="Where will it be posted?">
-              <div className="flex flex-wrap gap-2">
-                {(o?.platforms ?? []).map((p) => (
-                  <Choice key={p} value={p} current={v.platform} onSelect={() => { form.setValue("platform", p); form.setValue("aspect_ratio", PLATFORM_RATIO[p] ?? "9:16"); }}>{label(p)}</Choice>
-                ))}
-              </div>
-            </Field>
-            <Field label="Format">
-              <div className="flex flex-wrap gap-2">
-                {(["9:16", "16:9", "1:1"] as const).map((r) => <Choice key={r} value={r} current={v.aspect_ratio} onSelect={() => form.setValue("aspect_ratio", r)}>{label(r)}</Choice>)}
-              </div>
-            </Field>
-            <div className="grid gap-6 sm:grid-cols-2">
-              <Field label="Visual style" htmlFor="style">
-                <SelectField id="style" value={v.visual_style} onChange={(x) => form.setValue("visual_style", x)} items={opts(o?.visual_styles)} />
-              </Field>
-              <Field label="Caption animation" htmlFor="captions">
-                <SelectField id="captions" value={v.caption_animation} onChange={(x) => form.setValue("caption_animation", x)} items={opts(o?.caption_animations)} />
-              </Field>
+          </Field>
+          <Field label="Format">
+            <div className="flex flex-wrap gap-2">
+              {FORMATS.map((f) => (
+                <Choice key={f.value} value={f.value} current={v.aspect_ratio} onSelect={() => { form.setValue("aspect_ratio", f.value); form.setValue("platform", f.platform); }}>
+                  <span className="block text-text">{f.name}</span>
+                  <span className="block text-xs text-faint">{f.where}</span>
+                </Choice>
+              ))}
             </div>
-          </>
-        )}
+          </Field>
+        </div>
 
-        {step === 2 && (
-          <>
-            <Field label="Narrator voice" htmlFor="voice" hint={voices.error ? "Voices are unavailable until Kokoro is installed." : undefined}>
-              <div className="flex items-center gap-3">
-                <div className="flex-1">
-                  <SelectField
-                    id="voice"
-                    value={v.voice_id}
-                    onChange={(x) => form.setValue("voice_id", x)}
-                    items={(voices.data ?? [{ id: v.voice_id, name: v.voice_id, accent: "", gender: "", language: "" }])
-                      .filter((x) => !x.language || x.language === v.language)
-                      .map((x) => ({ value: x.id, label: x.accent ? `${x.name} · ${x.accent} ${x.gender}` : x.name }))}
+        <Field label="Look">
+          <div className="flex flex-wrap gap-2">
+            {(o?.visual_styles ?? [v.visual_style]).map((s) => (
+              <Choice key={s} value={s} current={v.visual_style} onSelect={() => form.setValue("visual_style", s)}>{label(s)}</Choice>
+            ))}
+          </div>
+        </Field>
+
+        {create.error ? <ErrorNotice error={create.error} /> : null}
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+          <Button type="submit" size="lg" disabled={create.isPending}>
+            <Sparkles className="size-4" /> {create.isPending ? "Starting…" : "Make my video"}
+          </Button>
+          <button type="button" disabled={create.isPending} onClick={() => void start(false)} className="text-sm text-subtle underline-offset-4 hover:text-text hover:underline disabled:opacity-50">
+            Review the storyboard before rendering
+          </button>
+        </div>
+        <p className="-mt-4 text-sm text-faint">You can leave this page while it works. The finished video appears in the editor.</p>
+
+        <section className="rounded-xl border border-line">
+          <button
+            type="button"
+            onClick={() => setMoreOpen((x) => !x)}
+            aria-expanded={moreOpen}
+            aria-controls="more-options"
+            className="flex w-full items-center justify-between px-5 py-4 text-left text-sm"
+          >
+            <span>
+              <span className="text-text">More options</span>
+              <span className="ml-2 text-faint">Voice, tone, captions, music, language, fact checking</span>
+            </span>
+            <ChevronDown className={cn("size-4 text-subtle transition-transform", moreOpen && "rotate-180")} aria-hidden />
+          </button>
+          {moreOpen && (
+            <div id="more-options" className="grid gap-6 border-t border-line p-5">
+              {dna.data && dna.data.length > 0 && (
+                <Field label="Story DNA" hint="Applies a saved channel identity: style, voice, captions and music.">
+                  <div className="flex flex-wrap gap-2">
+                    <Choice value="none" current={v.story_dna_id ?? "none"} onSelect={() => applyDna(null)}>None</Choice>
+                    {dna.data.map((d) => <Choice key={d.id} value={d.id} current={v.story_dna_id ?? "none"} onSelect={() => applyDna(d.id)}>{d.name}</Choice>)}
+                  </div>
+                </Field>
+              )}
+              <Field label="Narrator voice" htmlFor="voice" hint={voices.error ? "Voices are unavailable until Kokoro is installed." : undefined}>
+                <div className="flex items-center gap-3">
+                  <div className="flex-1">
+                    <SelectField
+                      id="voice"
+                      value={v.voice_id}
+                      onChange={(x) => form.setValue("voice_id", x)}
+                      items={(voices.data ?? [{ id: v.voice_id, name: v.voice_id, accent: "", gender: "", language: "" }])
+                        .filter((x) => !x.language || x.language === v.language)
+                        .map((x) => ({ value: x.id, label: x.accent ? `${x.name}, ${x.accent} ${x.gender}` : x.name }))}
+                    />
+                  </div>
+                  <AudioButton
+                    label="voice sample"
+                    load={() => creativeApi.previewVoice({ voice_id: v.voice_id, speed: v.voice_speed, language: v.language, text: v.topic || "Every story starts with a single question." })}
                   />
                 </div>
-                <AudioButton
-                  label="voice sample"
-                  load={() => creativeApi.previewVoice({ voice_id: v.voice_id, speed: v.voice_speed, language: v.language, text: v.topic || "Every story starts with a single question." })}
-                />
+              </Field>
+              <Field label={`Speaking speed: ${v.voice_speed.toFixed(2)}×`}>
+                <Slider min={0.7} max={1.4} step={0.05} value={[v.voice_speed]} onValueChange={([x]) => form.setValue("voice_speed", x)} aria-label="Speaking speed" />
+              </Field>
+              <div className="grid gap-6 sm:grid-cols-2">
+                <Field label="Story tone" htmlFor="tone">
+                  <SelectField id="tone" value={v.story_tone} onChange={(x) => form.setValue("story_tone", x)} items={opts(o?.story_tones)} />
+                </Field>
+                <Field label="Language" htmlFor="language" hint="Narration language. Voices are matched to it.">
+                  <SelectField id="language" value={v.language} onChange={(x) => form.setValue("language", x)} items={(o?.languages ?? []).map((l) => ({ value: l.code, label: l.name }))} />
+                </Field>
+                <Field label="Caption animation" htmlFor="captions">
+                  <SelectField id="captions" value={v.caption_animation} onChange={(x) => form.setValue("caption_animation", x)} items={opts(o?.caption_animations)} />
+                </Field>
+                <Field label="Platform" htmlFor="platform" hint="Used for pacing and the safe area for captions.">
+                  <SelectField id="platform" value={v.platform} onChange={(x) => form.setValue("platform", x)} items={opts(o?.platforms)} />
+                </Field>
               </div>
-            </Field>
-            <Field label={`Speaking speed: ${v.voice_speed.toFixed(2)}×`}>
-              <Slider min={0.7} max={1.4} step={0.05} value={[v.voice_speed]} onValueChange={([x]) => form.setValue("voice_speed", x)} aria-label="Speaking speed" />
-            </Field>
-            <Field label="Music" hint="Scores are composed locally for each video and are royalty-free.">
-              <div className="flex flex-wrap gap-2">
-                <Choice value="auto" current={v.music_mood} onSelect={() => form.setValue("music_mood", "auto")}>Match the story</Choice>
-                {(o?.music_moods ?? []).map((m) => <Choice key={m} value={m} current={v.music_mood} onSelect={() => form.setValue("music_mood", m)}>{label(m)}</Choice>)}
-              </div>
-            </Field>
-            <label className="flex items-center gap-3 text-sm">
-              <Controller control={form.control} name="sfx_enabled" render={({ field }) => <Switch checked={field.value} onCheckedChange={field.onChange} aria-label="Sound effects" />} />
-              Add sound effects for transitions and atmosphere
-            </label>
-          </>
-        )}
-
-        {step === 3 && (
-          <div className="grid gap-6">
-            <dl className="grid gap-x-8 gap-y-3 rounded-xl border border-line p-5 text-sm sm:grid-cols-2">
-              {[
-                ["Subject", v.topic],
-                ["Length", `${v.duration_seconds} seconds`],
-                ["Format", `${label(v.aspect_ratio)} for ${label(v.platform)}`],
-                ["Style", label(v.visual_style)],
-                ["Tone", label(v.story_tone)],
-                ["Voice", `${v.voice_id} at ${v.voice_speed.toFixed(2)}×`],
-                ["Captions", label(v.caption_animation)],
-                ["Music", v.music_mood === "auto" ? "Match the story" : label(v.music_mood)],
-              ].map(([k, val]) => (
-                <div key={k} className="min-w-0">
-                  <dt className="text-faint">{k}</dt>
-                  <dd className="mt-0.5 break-words text-text">{val}</dd>
+              <Field label="Music" hint="Scores are composed locally for each video and are royalty-free.">
+                <div className="flex flex-wrap gap-2">
+                  <Choice value="auto" current={v.music_mood} onSelect={() => form.setValue("music_mood", "auto")}>Match the story</Choice>
+                  {(o?.music_moods ?? []).map((m) => <Choice key={m} value={m} current={v.music_mood} onSelect={() => form.setValue("music_mood", m)}>{label(m)}</Choice>)}
                 </div>
-              ))}
-            </dl>
-            {create.error ? <ErrorNotice error={create.error} /> : null}
-            <div className="grid gap-3 sm:grid-cols-2">
-              <button type="button" disabled={create.isPending} onClick={() => create.mutate(false)} className="rounded-xl border border-uv bg-uv/10 p-5 text-left hover:bg-uv/15 disabled:opacity-50">
-                <p className="font-semibold">Write the storyboard</p>
-                <p className="mt-1 text-sm text-subtle">Pick a hook, review the script and scenes, then render. Recommended.</p>
-              </button>
-              <button type="button" disabled={create.isPending} onClick={() => create.mutate(true)} className="rounded-xl border border-line p-5 text-left hover:border-line-strong disabled:opacity-50">
-                <p className="font-semibold">Produce the whole video</p>
-                <p className="mt-1 text-sm text-subtle">Write, illustrate, voice and render in one go. You can still edit afterwards.</p>
-              </button>
+              </Field>
+              <label className="flex items-center gap-3 text-sm">
+                <Controller control={form.control} name="sfx_enabled" render={({ field }) => <Switch checked={field.value} onCheckedChange={field.onChange} aria-label="Sound effects" />} />
+                Add sound effects for transitions and atmosphere
+              </label>
+              <label className="flex items-start gap-3 text-sm">
+                <Controller control={form.control} name="fact_check_enabled" render={({ field }) => <Switch checked={field.value} onCheckedChange={field.onChange} aria-label="Fact check" />} />
+                <span><span className="text-text">Check facts against sources</span><br /><span className="text-faint">Uses Wikipedia to verify claims in educational and historical scripts.</span></span>
+              </label>
             </div>
-          </div>
-        )}
-
-        {step < 3 && (
-          <div className="flex gap-2">
-            {step > 0 && <Button type="button" variant="outline" onClick={() => setStep(step - 1)}>Back</Button>}
-            <Button type="button" onClick={next}>Continue</Button>
-          </div>
-        )}
+          )}
+        </section>
       </form>
     </Page>
   );

@@ -24,7 +24,8 @@ from app.infrastructure.database.models import (
 from app.workers.context import JobContext
 
 
-def creative_context(session: Session, project: Project, hook_style: str | None = None) -> CreativeContext:
+def creative_context(session: Session, project: Project, hook_style: str | None = None,
+                     forced_hook: str | None = None) -> CreativeContext:  # fmt: skip
     s = project.settings
     dna_notes, continuity = "", ""
     if project.story_dna_id and (dna := session.get(StoryDnaProfile, project.story_dna_id)):
@@ -46,6 +47,7 @@ def creative_context(session: Session, project: Project, hook_style: str | None 
     return CreativeContext(
         topic=project.topic, duration=s.duration_seconds, tone=s.story_tone, platform=s.platform, language=s.language,
         visual_style=s.visual_style, dna_notes=dna_notes, continuity=continuity, preferred_hook_style=hook_style,
+        forced_hook=forced_hook,
     )  # fmt: skip
 
 
@@ -93,35 +95,34 @@ def project_palette(session: Session, project: Project) -> list[str]:
 
 
 def generate_story(session: Session, director: StoryDirector, project: Project, ctx: JobContext,
-                   *, hook_index: int | None = None, hook_style: str | None = None, fact_check: bool = True) -> Storyboard:  # fmt: skip
-    """Full Story Director run with progress reporting. Commits after each step so work is never lost."""
+                   *, hook_style: str | None = None, hook_text: str | None = None, fact_check: bool = True) -> Storyboard:  # fmt: skip
+    """Story Director run with progress reporting: one call writes the story, one directs the storyboard.
+    Commits after each step so work is never lost."""
     project.status = ProjectStatus.GENERATING_STORY.value
     session.commit()
-    cc = creative_context(session, project, hook_style)
+    cc = creative_context(session, project, hook_style, hook_text)
     research_ok = False
     if project.settings.fact_check_enabled and director.research:
         health = director.research.health()
         research_ok = health.available
         if not research_ok:
             ctx.log("warning", f"Fact checking unavailable: {health.detail}")
-    ctx.stage(JobStatus.SCRIPT_GENERATION, 3, "Researching the subject" if research_ok else "Skipping research (offline)")
+    if research_ok:
+        ctx.stage(JobStatus.SCRIPT_GENERATION, 3, "Researching the subject")
     reference, sources = director.gather_reference(cc.topic) if research_ok else ("", [])
-    ctx.stage(JobStatus.SCRIPT_GENERATION, 8, "Story Director is analysing the topic")
-    brief = director.generate_brief(cc, reference)
-    ctx.stage(JobStatus.SCRIPT_GENERATION, 18, "Hook Lab: writing alternative hooks")
-    hooks = director.generate_hooks(cc, brief)
-    chosen = hook_index if hook_index is not None and 0 <= hook_index < len(hooks) else director.pick_hook(hooks, cc)
-    ctx.stage(JobStatus.SCRIPT_GENERATION, 28, "Writing the narration")
-    script = director.generate_script(cc, brief, hooks[chosen].text)
-    claims = script.claims or brief.key_facts
-    if fact_check and research_ok:
+    ctx.stage(JobStatus.SCRIPT_GENERATION, 8, "Writing the story: hooks and narration")
+    draft = director.write_story(cc, reference)
+    script = draft.to_script()
+    claims = script.claims
+    if fact_check and research_ok and claims:
         ctx.stage(JobStatus.SCRIPT_GENERATION, 40, "Fact checker: verifying claims against sources")
         claims = director.fact_check(claims)
     version = (session.scalar(select(func.max(ScriptVersion.version)).where(ScriptVersion.project_id == project.id)) or 0) + 1
     row = ScriptVersion(
-        project_id=project.id, version=version, title=script.title, brief=brief.model_dump(mode="json") | {
-            "sources": [{"title": s.title, "url": s.url} for s in sources]},
-        hooks=[h.model_dump(mode="json") for h in hooks], selected_hook_index=chosen,
+        project_id=project.id, version=version, title=script.title,
+        brief={"music_mood": draft.music_mood.value,
+               "sources": [{"title": s.title, "url": s.url} for s in sources]},
+        hooks=[h.model_dump(mode="json") for h in draft.to_hooks()], selected_hook_index=0,
         content=script.model_dump(mode="json", exclude={"claims"}), full_text=script.full_text,
         claims=[c.model_dump(mode="json") for c in claims], model=getattr(director.llm, "model", None),
     )  # fmt: skip
@@ -129,7 +130,7 @@ def generate_story(session: Session, director: StoryDirector, project: Project, 
     project.title = script.title[:120]
     session.commit()
     ctx.stage(JobStatus.STORYBOARD_GENERATION, 50, "Storyboard: directing scenes and choosing visuals")
-    board_draft = director.generate_storyboard(cc, script)
+    board_draft = director.generate_storyboard(cc, script.full_text)
     board = save_storyboard(session, project, row, list(board_draft.scenes), project_palette(session, project))
     project.status = ProjectStatus.STORYBOARD_READY.value
     session.commit()

@@ -1,8 +1,10 @@
-# ReelForge AI - full local AI setup for Windows (CPU or NVIDIA GPU).
+# NaRRAVO - full local AI setup for Windows (CPU or NVIDIA GPU).
 # Installs everything under <repo>\.runtime (git-ignored). Nothing is installed system-wide.
-#   powershell -ExecutionPolicy Bypass -File infrastructure\scripts\setup-ai.ps1 [-SkipComfy] [-SkipOllama] [-Model qwen3.5:4b]
+#   powershell -ExecutionPolicy Bypass -File infrastructure\scripts\setup-ai.ps1 [-WithComfy] [-SkipOllama] [-Model qwen3.5:4b]
+# Images use OpenVINO on the CPU by default (~20 s per image). ComfyUI is only installed with -WithComfy or
+# when an NVIDIA GPU is present, where it is faster.
 param(
-    [switch]$SkipComfy,
+    [switch]$WithComfy,
     [switch]$SkipOllama,
     [string]$Model = "qwen3.5:4b",
     [string]$OllamaVersion = "v0.40.15"
@@ -36,14 +38,22 @@ function Download($Url, $Dest) {
 $Uv = Get-Uv
 & $Uv python install 3.13 | Out-Null
 
-Write-Host "`n[1/3] Kokoro TTS worker (isolated GPL-3.0 process)"
+Write-Host "`n[1/4] Kokoro TTS worker (isolated GPL-3.0 process)"
 Push-Location (Join-Path $Root "ai-engine\tts-worker"); & $Uv sync; Pop-Location
 $K = Join-Path $Runtime "models\kokoro"
 Download "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx" "$K\kokoro-v1.0.onnx"
 Download "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin" "$K\voices-v1.0.bin"
 
+Write-Host "`n[2/4] Image model for OpenVINO (LCM Dreamshaper v7 INT8 + TAESD decoder, ~1 GB)"
+Push-Location (Join-Path $Root "backend")
+& $Uv sync
+& .venv\Scripts\opt_in_out.exe --opt_out 2>$null | Out-Null  # keep OpenVINO telemetry off
+& $Uv run python ..\infrastructure\scripts\fetch_image_model.py
+if ($LASTEXITCODE -ne 0) { throw "image model download failed" }
+Pop-Location
+
 if (-not $SkipOllama) {
-    Write-Host "`n[2/3] Ollama $OllamaVersion (portable) + $Model"
+    Write-Host "`n[3/4] Ollama $OllamaVersion (portable) + $Model"
     $O = Join-Path $Runtime "ollama"
     if (-not (Test-Path "$O\ollama.exe")) {
         $zip = Join-Path $Runtime "ollama-windows-amd64.zip"
@@ -60,13 +70,13 @@ if (-not $SkipOllama) {
     Stop-Process -Id $serve.Id -ErrorAction SilentlyContinue
 }
 
-if (-not $SkipComfy) {
-    Write-Host "`n[3/3] ComfyUI (GPL-3.0, separate process) + SD 1.5 + LCM-LoRA"
+$hasNvidia = [bool](Get-Command nvidia-smi -ErrorAction SilentlyContinue)
+if ($WithComfy -or $hasNvidia) {
+    Write-Host "`n[4/4] ComfyUI (GPL-3.0, separate process) + SD 1.5 + LCM-LoRA"
     $C = Join-Path $Runtime "ComfyUI"
     if (-not (Test-Path $C)) { git clone --depth 1 https://github.com/comfyanonymous/ComfyUI.git $C }
     Push-Location $C
     if (-not (Test-Path ".venv")) { & $Uv venv --python 3.13 .venv }
-    $hasNvidia = [bool](Get-Command nvidia-smi -ErrorAction SilentlyContinue)
     $index = if ($hasNvidia) { "https://download.pytorch.org/whl/cu128" } else { "https://download.pytorch.org/whl/cpu" }
     Write-Host "  installing PyTorch from $index"
     & $Uv pip install --python .venv torch torchvision torchaudio --index-url $index

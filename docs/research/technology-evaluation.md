@@ -1,4 +1,4 @@
-# ReelForge AI — Technology Evaluation (Phase Zero)
+# NaRRAVO — Technology Evaluation (Phase Zero)
 
 - Research date: 2026-11-09
 - Baseline hardware: Windows 11, Intel i7-10700 (8C/16T, AVX2, no AVX-512/VNNI), 32 GB DDR4, Intel UHD 630 iGPU, **no CUDA GPU**, no Docker, system Python 3.15.2, Node 24.20.0
@@ -143,7 +143,7 @@ Requirement: a **server-side, deterministic, headless** renderer running in a Py
 
 - License: Remotion License, not OSI (https://github.com/remotion-dev/remotion/blob/main/LICENSE.md). It is free only for individuals, non-profits, evaluation, and for-profit organisations of **up to 3 employees**. A **Company License** is required for 4+ people (https://www.remotion.pro/license).
 - Automated/server rendering is priced as "**Remotion for Automators: $0.01 per render, $100/month minimum**" and is explicitly aimed at "prompt-to-video apps" (https://www.remotion.pro/license). The license also says it "will slightly change" in Remotion 5.0.
-- **Verdict: REJECTED.** ReelForge is open source and will be self-hosted by unknown organisations. Any operator with more than 3 employees would owe Remotion fees, and the project's no-billing/no-paid-API principle is violated. The technology itself is excellent and actively maintained (4.0.541 released 2026-11-05).
+- **Verdict: REJECTED.** NaRRAVO is open source and will be self-hosted by unknown organisations. Any operator with more than 3 employees would owe Remotion fees, and the project's no-billing/no-paid-API principle is violated. The technology itself is excellent and actively maintained (4.0.541 released 2026-11-05).
 
 ### 3.4 MoviePy 2.x
 

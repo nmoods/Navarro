@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-DIRECTOR_SYSTEM = """You are the Story Director of ReelForge AI: a documentary writer and director for short vertical videos.
+DIRECTOR_SYSTEM = """You are the Story Director of NaRRAVO: a documentary writer and director for short vertical videos.
 Rules you never break:
 - Accuracy beats drama. Never invent quotes, names, dates, numbers or sources.
 - When something is uncertain or debated, say so in the narration ("historians believe", "one theory says").
@@ -49,32 +49,24 @@ zoom for punchy reveals, slide_left/slide_up for lists. First scene transition i
 Music cue: build, steady, tension, drop (sudden silence then hit) or resolve."""
 
 
-def brief_prompt(topic: str, tone: str, platform: str, language: str, reference: str) -> str:
+def story_prompt(topic: str, tone: str, language: str, reference: str, words: int, dna_notes: str,
+                 hook_style: str | None, forced_hook: str | None) -> str:  # fmt: skip
     ref = f"\nREFERENCE MATERIAL (encyclopedia excerpt; prefer it for facts):\n{reference}\n" if reference else (
-        "\nNo reference material is available offline: mark anything not broadly documented as uncertain.\n"
+        '\nNo reference material is available: say "historians believe" or similar for anything not broadly documented.\n'
     )
+    if forced_hook:
+        hook_rule = f"Use this opening line verbatim as the FIRST hook: {forced_hook}\nThen add 2 alternatives in other styles."
+    else:
+        first = f"The first hook must use the '{hook_style}' style. " if hook_style else ""
+        hook_rule = f"{first}Write 3 hooks in different styles (shocking, mysterious, question, controversial, emotional, curiosity)."
+    sections = max(20, round(words * 0.3))  # small models undershoot a single total; per-section budgets hold better
     return (
-        f"TOPIC: {topic}\nTONE: {tone}\nPLATFORM: {platform}\nLANGUAGE: {language}\n{ref}\n"
-        "Analyse the topic and produce a story brief: who it is for, the most compelling honest angle, an "
-        "emotional arc, 3-8 key facts each with a confidence rating, and open questions."
-    )
-
-
-def hooks_prompt(topic: str, brief_json: str) -> str:
-    return (
-        f"TOPIC: {topic}\nBRIEF: {brief_json}\n\nWrite 6 alternative opening hooks, exactly one per style: shocking, "
-        "mysterious, question, controversial, emotional, curiosity. Each under 22 words, spoken aloud in the first "
-        "2 seconds, truthful to the brief. Add a one-line rationale."
-    )
-
-
-def script_prompt(topic: str, brief_json: str, hook: str, words: int, tone: str, language: str, dna_notes: str) -> str:
-    return (
-        f"TOPIC: {topic}\nTONE: {tone}\nLANGUAGE: write the narration in '{language}'\nBRIEF: {brief_json}\n"
-        f"OPENING HOOK (use verbatim as the hook field): {hook}\n{dna_notes}\n"
-        f"Write the narration. Total length of hook+beginning+middle+conclusion: about {words} words "
-        f"(between {int(words * 0.9)} and {int(words * 1.1)}). Structure: hook -> setup -> escalation with concrete "
-        "details -> payoff or honest open question. List every factual claim you make in claims with a confidence."
+        f"TOPIC: {topic}\nTONE: {tone}\nLANGUAGE: write the narration in '{language}'\n{ref}{dna_notes}\n"
+        f"Write a short narrated documentary. {hook_rule}\nEach hook is under 22 words, spoken in the first 2 "
+        f"seconds and truthful. Then write beginning, middle and conclusion with about {sections} words EACH, so the "
+        f"whole narration is about {words} words. Do not repeat the hook in beginning. Structure: setup -> escalation "
+        "with concrete details -> payoff or honest open question. List the 3 most important factual claims the "
+        "narration makes, each with a confidence."
     )
 
 
@@ -82,10 +74,10 @@ def storyboard_prompt(topic: str, style: str, scenes: list[str], dna_notes: str,
     numbered = "\n".join(f"{i + 1}. {s}" for i, s in enumerate(scenes))
     return (
         f"TOPIC: {topic}\nVISUAL STYLE: {style} ({STYLE_PROMPTS.get(style, '')})\n{dna_notes}\n{continuity}\n"
-        f"The narration is already split into exactly {len(scenes)} scenes. Do NOT rewrite it; copy each scene's "
-        f"narration verbatim into its narration field.\n\nSCENES:\n{numbered}\n\n{VISUAL_GUIDE}\n\n"
-        f"Return exactly {len(scenes)} scenes in order. image_prompt must describe a single striking image with "
-        "subject, setting, era, lighting and composition, with no text in the image."
+        f"The narration is final and already split into exactly {len(scenes)} scenes:\n{numbered}\n\n{VISUAL_GUIDE}\n\n"
+        f"Direct each scene: return exactly {len(scenes)} scenes in order, without repeating the narration. "
+        "image_prompt describes one striking image (subject, setting, era, lighting, composition) with no text in "
+        "it. Add visual_data only when the visual type needs it."
     )
 
 
@@ -122,7 +114,7 @@ def ideas_prompt(theme: str, count: int) -> str:
 
 def claim_prompt(claim: str, excerpt: str, source_title: str) -> str:
     return (
-        f"CLAIM: {claim}\nSOURCE ({source_title}):\n{excerpt[:3000]}\n\nDoes the source support the claim? verdict: "
+        f"CLAIM: {claim}\nSOURCE ({source_title}):\n{excerpt[:2000]}\n\nDoes the source support the claim? verdict: "
         "supported (the source states it), contradicted (the source states otherwise), not_found (source does not "
         "address it). Explain in one sentence."
     )

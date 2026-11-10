@@ -1,6 +1,6 @@
 # System architecture
 
-ReelForge AI is a **modular monolith**: one FastAPI codebase with strict internal boundaries, plus three
+NaRRAVO is a **modular monolith**: one FastAPI codebase with strict internal boundaries, plus three
 isolated processes for components with incompatible licences or heavy resource needs. Every AI capability
 runs locally; nothing depends on a paid API.
 
@@ -84,8 +84,8 @@ configuration validation in production and flagged `is_test_double` in the UI.
 
 ## Scaling path
 
-1. Run the worker separately (`REELFORGE_EMBEDDED_WORKER=false`), raise `WORKER_CONCURRENCY` per box.
+1. Run the worker separately (`NARRAVO_EMBEDDED_WORKER=false`), raise `WORKER_CONCURRENCY` per box.
 2. Point several worker machines at the same PostgreSQL; claims are `SKIP LOCKED`.
-3. Move media to R2 (`REELFORGE_STORAGE_BACKEND=r2`); workers keep a local read-through cache.
+3. Move media to R2 (`NARRAVO_STORAGE_BACKEND=r2`); workers keep a local read-through cache.
 4. Replace the in-process rate limiter with Redis when running more than one API replica.
 5. Split providers onto GPU hosts by setting `OLLAMA_URL`/`COMFYUI_URL` to private network addresses.

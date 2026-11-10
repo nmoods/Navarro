@@ -1,7 +1,7 @@
 [project]
-name = "reelforge-backend"
+name = "narravo-backend"
 version = "0.1.0"
-description = "ReelForge AI backend: API, job worker, AI orchestration and render engine"
+description = "NaRRAVO backend: API, job worker, AI orchestration and render engine"
 requires-python = ">=3.13"
 dependencies = [
     "alembic>=1.20.1",
@@ -12,6 +12,7 @@ dependencies = [
     "imageio-ffmpeg>=0.8.1",
     "numpy>=2.5.4",
     "opencv-python-headless>=5.0.0.93",
+    "openvino-genai>=2026.4",
     "pillow>=13.0.0",
     "psycopg[binary]>=3.3.8",
     "pydantic-settings>=2.16.2",

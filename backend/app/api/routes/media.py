@@ -96,6 +96,6 @@ def content(asset_id: uuid.UUID, session: DbSession, settings: SettingsDep, stor
 @router.get("/{asset_id}/download")
 def download(asset_id: uuid.UUID, session: DbSession, settings: SettingsDep, storage: StorageDep, u: str, exp: int, sig: str):  # type: ignore[no-untyped-def]
     asset = _signed_asset(session, settings, asset_id, u, exp, sig)
-    name = asset.original_name or f"reelforge-{asset.id.hex[:8]}.{asset.mime_type.split('/')[-1]}"
+    name = asset.original_name or f"narravo-{asset.id.hex[:8]}.{asset.mime_type.split('/')[-1]}"
     safe = "".join(c for c in name if c.isalnum() or c in "-_.")[:100] or "download.mp4"
     return FileResponse(storage.local_path(asset.storage_key), media_type=asset.mime_type, filename=safe)

@@ -11,7 +11,7 @@ from pydantic import ValidationError
 from app.application.ports import ProviderHealth, T
 from app.core.errors import ProviderError, ProviderUnavailableError
 
-logger = logging.getLogger("reelforge.ollama")
+logger = logging.getLogger("narravo.ollama")
 
 
 class OllamaProvider:
@@ -57,6 +57,7 @@ class OllamaProvider:
             "format": schema,
             "stream": False,
             "think": False,
+            "keep_alive": "30m",  # a story is several calls; reloading the model between them costs seconds
             "options": {"temperature": temperature, "num_ctx": 8192},
         }
         try:
@@ -73,9 +74,12 @@ class OllamaProvider:
         if resp.status_code >= 400:
             raise ProviderError(self.name, f"Ollama returned HTTP {resp.status_code}: {resp.text[:200]}")
         try:
-            content = resp.json()["message"]["content"]
+            data = resp.json()
+            content = data["message"]["content"]
         except (KeyError, ValueError) as exc:
             raise ProviderError(self.name, "Malformed Ollama response") from exc
+        logger.info("ollama %s: %s prompt tokens, %s output tokens in %.1fs", self.model, data.get("prompt_eval_count"),
+                    data.get("eval_count"), (data.get("total_duration") or 0) / 1e9)  # fmt: skip
         content = content.strip()
         if content.startswith("```"):
             content = content.strip("`").removeprefix("json").strip()

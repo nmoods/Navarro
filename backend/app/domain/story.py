@@ -39,24 +39,10 @@ class Claim(StrictModel):
     sources: list[str] = Field(default_factory=list, max_length=5)
 
 
-class StoryBrief(StrictModel):
-    subject_summary: str = Field(description="What the subject is, in two sentences", max_length=600)
-    target_audience: str = Field(max_length=200)
-    angle: str = Field(description="The narrative angle that makes this story compelling", max_length=300)
-    emotional_arc: str = Field(description="e.g. curiosity -> dread -> revelation", max_length=200)
-    key_facts: list[Claim] = Field(min_length=1, max_length=10)
-    open_questions: list[str] = Field(default_factory=list, max_length=6)
-    music_mood: MusicMood = MusicMood.MYSTERY
-
-
 class Hook(StrictModel):
     style: HookStyle
     text: str = Field(description="Spoken opening line, under 22 words, no clickbait lies", max_length=220)
     rationale: str = Field(default="", max_length=240)
-
-
-class HookSet(StrictModel):
-    hooks: list[Hook] = Field(min_length=3, max_length=8)
 
 
 class Script(StrictModel):
@@ -108,17 +94,18 @@ class VisualData(StrictModel):
     kinetic_lines: list[str] = Field(default_factory=list, max_length=4)
 
 
+VISUAL_TYPE_HELP = (
+    "Pick the visual that best explains this moment: historical_map for places/journeys, "
+    "timeline for chronology, infographic for numbers, comparison for contrasts, newspaper for "
+    "reported events, character_portrait for a person, kinetic_typography for a punchline/quote, "
+    "parallax for dramatic landscapes, cinematic_image otherwise"
+)
+
+
 class SceneDraft(StrictModel):
     title: str = Field(max_length=80)
     narration: str = Field(description="Exact words the narrator speaks in this scene", max_length=700)
-    visual_type: VisualType = Field(
-        description=(
-            "Pick the visual that best explains this moment: historical_map for places/journeys, "
-            "timeline for chronology, infographic for numbers, comparison for contrasts, newspaper for "
-            "reported events, character_portrait for a person, kinetic_typography for a punchline/quote, "
-            "parallax for dramatic landscapes, cinematic_image otherwise"
-        )
-    )
+    visual_type: VisualType = Field(description=VISUAL_TYPE_HELP)
     visual_description: str = Field(max_length=500)
     image_prompt: str = Field(
         description="Stable-Diffusion prompt: subject, setting, lighting, lens, style. No text/letters.",
@@ -150,6 +137,73 @@ class SceneDraft(StrictModel):
 
 class StoryboardDraft(StrictModel):
     scenes: list[SceneDraft] = Field(min_length=3, max_length=14)
+
+
+# -- One-pass story and compact storyboard ---------------------------------------------------------------
+# On a CPU a small model writes ~8-10 tokens/s, so every field the model has to emit costs time. The story
+# is written in one call (hooks + narration + claims) and the storyboard asks only for direction:
+# narration is fixed before that step, so it is never echoed back.
+
+
+class ClaimDraft(StrictModel):
+    text: str = Field(description="One factual statement made in the narration", max_length=300)
+    confidence: ClaimConfidence
+
+    def to_claim(self) -> Claim:
+        return Claim(text=self.text, confidence=self.confidence)
+
+
+class HookLine(StrictModel):
+    style: HookStyle
+    text: str = Field(description="Spoken opening line, under 22 words, truthful", max_length=220)
+
+
+class StoryDraft(StrictModel):
+    title: str = Field(description="Short punchy video title, under 70 characters", max_length=90)
+    music_mood: MusicMood
+    hooks: list[HookLine] = Field(
+        min_length=1, max_length=3,
+        description="3 alternative opening lines, each in a different style. The first one opens the video.",
+    )  # fmt: skip
+    beginning: str = Field(description="Setup that grounds the viewer", max_length=1500)
+    middle: str = Field(description="Escalation and key details", max_length=2500)
+    conclusion: str = Field(description="Payoff or open question; no false certainty", max_length=1500)
+    claims: list[ClaimDraft] = Field(min_length=1, max_length=4)
+
+    def to_script(self) -> Script:
+        return Script(title=self.title, hook=self.hooks[0].text, beginning=self.beginning, middle=self.middle,
+                      conclusion=self.conclusion, claims=[c.to_claim() for c in self.claims])  # fmt: skip
+
+    def to_hooks(self) -> list[Hook]:
+        return [Hook(style=h.style, text=h.text) for h in self.hooks]
+
+
+class ScenePlan(StrictModel):
+    title: str = Field(description="2-5 word scene title", max_length=60)
+    visual_type: VisualType = Field(description=VISUAL_TYPE_HELP)
+    image_prompt: str = Field(
+        description="Stable-Diffusion prompt: subject, setting, era, lighting, composition. No text/letters.",
+        max_length=400,
+    )
+    camera_movement: CameraMove
+    effects: list[Effect] = Field(default_factory=list, max_length=2)
+    transition: Transition = Field(description="Transition INTO this scene from the previous one")
+    emphasis_words: list[str] = Field(default_factory=list, description="1-3 words from the narration to highlight", max_length=3)
+    sound_effects: list[SoundEffect] = Field(default_factory=list, max_length=2)
+    music_cue: str = Field(default="steady", description="build | steady | drop | tension | resolve", max_length=20)
+    characters: list[str] = Field(default_factory=list, max_length=3)
+    visual_data: VisualData | None = Field(default=None, description="Only for map, timeline, infographic, comparison, newspaper or kinetic_typography")
+
+    def to_draft(self, narration: str) -> SceneDraft:
+        data = self.model_dump(exclude={"visual_data"})
+        return SceneDraft.model_validate(data | {
+            "narration": narration, "visual_description": self.image_prompt, "mood": self.music_cue,
+            "visual_data": (self.visual_data or VisualData()).model_dump(),
+        })  # fmt: skip
+
+
+class StoryboardPlan(StrictModel):
+    scenes: list[ScenePlan] = Field(min_length=3, max_length=14)
 
 
 class EpisodeIdea(StrictModel):

@@ -23,7 +23,7 @@ from app.infrastructure.storage.base import Storage
 from app.workers import queue
 from app.workers.context import JobContext
 
-logger = logging.getLogger("reelforge.handlers")
+logger = logging.getLogger("narravo.handlers")
 
 Handler = Callable[[Session, GenerationJob, JobContext, Settings, Providers, Storage], dict]
 
@@ -38,8 +38,8 @@ def _project(session: Session, job: GenerationJob) -> Project:
 def handle_story(session, job, ctx, settings, providers, storage) -> dict:  # type: ignore[no-untyped-def]
     project = _project(session, job)
     director = StoryDirector(providers.llm, providers.research)
-    board = generate_story(session, director, project, ctx, hook_index=job.payload.get("hook_index"),
-                           hook_style=job.payload.get("hook_style"))  # fmt: skip
+    board = generate_story(session, director, project, ctx, hook_style=job.payload.get("hook_style"),
+                           hook_text=job.payload.get("hook_text"))  # fmt: skip
     return {"storyboard_id": str(board.id), "scenes": len(board.scenes)}
 
 

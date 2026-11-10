@@ -18,7 +18,7 @@ from app.core.errors import RateLimitedError
 from app.domain.enums import ACTIVE_JOB_STATUSES, JobStatus, JobType
 from app.infrastructure.database.models import GenerationJob, GenerationJobLog
 
-logger = logging.getLogger("reelforge.queue")
+logger = logging.getLogger("narravo.queue")
 
 FIRST_STAGE = {
     JobType.STORY: JobStatus.SCRIPT_GENERATION,

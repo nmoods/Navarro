@@ -30,14 +30,12 @@ test("create, edit, regenerate, render, preview and download a video", async ({ 
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page.getByRole("heading", { name: /Welcome back/ })).toBeVisible();
 
-  // Wizard
+  // One-screen creation, reviewing the storyboard before rendering
   await page.goto("/create");
-  await page.getByLabel("What is the video about?").fill("The lost Roanoke colony");
-  await page.getByRole("button", { name: "30 seconds" }).click();
-  await page.getByRole("button", { name: "Continue" }).click();
-  await page.getByRole("button", { name: "Continue" }).click();
-  await page.getByRole("button", { name: "Continue" }).click();
-  await page.getByRole("button", { name: /Write the storyboard/ }).click();
+  await page.getByRole("button", { name: "The lost colony of Roanoke" }).click();
+  await expect(page.getByLabel("What is the video about?")).toHaveValue("The lost colony of Roanoke");
+  await page.getByRole("button", { name: "30 s" }).click();
+  await page.getByRole("button", { name: "Review the storyboard before rendering" }).click();
 
   // Storyboard generated (script + storyboard)
   await expect(page.getByRole("button", { name: /^1\./ }).first()).toBeVisible({ timeout: 60_000 });
@@ -84,4 +82,17 @@ test("create, edit, regenerate, render, preview and download a video", async ({ 
   await expect(page.getByText("You’ve made changes since this render.")).toBeVisible();
   await page.getByRole("button", { name: "Export video" }).click();
   await expect(page.getByText("Video exported")).toBeVisible({ timeout: 180_000 });
+});
+
+test("one line on the dashboard produces a finished video", async ({ page }) => {
+  await page.goto("/login");
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Password").fill(password);
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page.getByRole("heading", { name: /Welcome back/ })).toBeVisible();
+
+  await page.getByLabel("What is your next video about?").fill("The Great Emu War of 1932");
+  await page.getByRole("button", { name: "Make my video" }).click();
+  await expect(page).toHaveURL(/\/projects\/[0-9a-f-]+$/);
+  await expect(page.getByRole("link", { name: "MP4" })).toBeVisible({ timeout: 240_000 });
 });

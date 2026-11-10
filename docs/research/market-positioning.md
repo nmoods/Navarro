@@ -1,4 +1,4 @@
-# Market Positioning — ReelForge AI (Phase Zero)
+# Market Positioning — NaRRAVO (Phase Zero)
 
 - **Research date:** 2026-11-09.
 - **Supporting evidence:**
@@ -27,7 +27,7 @@
 
 ## 2. What competitors do well
 
-| Strength | Who leads | Lesson for ReelForge |
+| Strength | Who leads | Lesson for NaRRAVO |
 |---|---|---|
 | Idea-to-video in minutes | Fliki, Pictory, Revid, invideo | Time to first draft must be fast. The draft animatic must land in under a minute. |
 | Storyboard before generating | Kapwing (Kai), invideo | Plan first, then render. Adopt this as the default flow. |
@@ -101,7 +101,7 @@
 
 ### Positioning statement
 
-> **For** faceless storytellers (history, science, mystery, explainers, micro-fiction) **who** are tired of credit-burning tools that make interchangeable slideshows, **ReelForge AI is** a free, open-source, local-first story studio **that** turns any idea into a cinematic, fact-aware short with 2.5D motion, smart visuals and series-level continuity. **Unlike** cloud tools like invideo, Revid or AutoShorts, ReelForge runs on your own computer with no paywalls, no credits and no watermark. Your stories, assets and data never leave your machine unless you choose.
+> **For** faceless storytellers (history, science, mystery, explainers, micro-fiction) **who** are tired of credit-burning tools that make interchangeable slideshows, **NaRRAVO is** a free, open-source, local-first story studio **that** turns any idea into a cinematic, fact-aware short with 2.5D motion, smart visuals and series-level continuity. **Unlike** cloud tools like invideo, Revid or AutoShorts, NaRRAVO runs on your own computer with no paywalls, no credits and no watermark. Your stories, assets and data never leave your machine unless you choose.
 
 **Tagline:** *Turn any idea into a cinematic story.*
 
@@ -147,8 +147,34 @@
 
 | Risk | Note |
 |---|---|
-| **Name collision** | **reelforgeai.io** sells a near-identical commercial "ReelForge AI" faceless generator (free tier plus $17–$147/mo). Other "ReelForge" products also appear on Product Hunt. **Recommend a trademark and SEO check and considering a rename before public launch.** |
+| **Name collision** | **reelforgeai.io** sells a near-identical commercial "ReelForge AI" faceless generator (free tier plus $17–$147/mo). Other "ReelForge" products also appear on Product Hunt. **Resolved: the project was renamed from ReelForge to NaRRAVO (2026-11-10); see the NaRRAVO name check below.** |
 | CPU performance | 2.5D inpainting, local LLM and image generation speed must be benchmarked on target hardware in Phase 1. Feasibility ratings are estimates. |
 | Model and data licences | Depth, TTS, image, LLM and map data licences must be cleared for redistribution. This is deferred to the tech/licence research track. Edge TTS is a free *cloud* endpoint, not local; avoid it as a default for privacy claims. |
 | Platform policy drift | YouTube inauthentic-content enforcement details from 2026 are from secondary sources. Re-verify before marketing "policy-safe" claims. Phrase it as "helps reduce risk", never as a guarantee. |
 | Data gaps | VEED, Canva, Lumen5 and FacelessReels pricing could not be verified from primary pages: dynamic rendering or HTTP 403. |
+
+## NaRRAVO name check (2026-11-10)
+
+The product was renamed from ReelForge to NaRRAVO because reelforgeai.io sells a near-identical product.
+Web search, App Store, GitHub, DNS and US trademark aggregator searches for "Narravo" found **no AI video
+generator or faceless-video tool with this name**. The name is in use elsewhere:
+
+| Use | What it is | Overlap with NaRRAVO |
+|---|---|---|
+| narravo.com | Narravo, a founder-led brokerage / M&A advisory firm in London (founded 2025, per PitchBook) | Different industry; owns the .com |
+| App Store "Narravo" (Moutaz Baaj, Feb–Mar 2025) | Text-to-speech and OCR reader app, category Books | Adjacent (narration/TTS), not video |
+| Firefox add-on "Narravo" (Ming Li, MIT) | Browser text-to-speech extension | Adjacent (narration), not video |
+| github.com/kjnjckx/Narravo (MIT, 0 stars, Oct 2026) | Local-first desktop novel-writing, read-aloud and voice role-play app | Adjacent (AI narration), not video |
+| github.com/sphildreth/narravo (Apache-2.0) | Self-hosted blog engine | None |
+| YouTube "Narravo Stories" (@NarravoStories) | Channel publishing audio mystery and thriller stories | Same audience (story content), but a channel, not a tool |
+| narravostudio.com | Small creative production studio (Pakistan, per search snippet; site showed a hosting placeholder when checked) | Adjacent (production services) |
+| "narravo" | Italian verb form ("I was narrating") and a very rare surname | Explains the name; generic |
+
+Domains (DNS lookup only, which shows whether a domain resolves, not whether it is registered): narravo.com
+resolves; narravo.ai, .io, .app, .studio, .video, .co and .tv returned no DNS records. Check availability with a
+registrar before relying on that.
+
+Trademark: aggregator searches of USPTO data surfaced no NARRAVO mark; the closest hit was **NARAVO**
+(Naravo LLC, US reg. 7283970, class 21 housewares), a different spelling in an unrelated class. EUIPO, UKIPO
+and WIPO databases were **not** searched. A clearance search by a trademark professional is still
+recommended before commercial launch.

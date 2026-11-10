@@ -47,46 +47,35 @@ class FixtureLLM:
             raise NotImplementedError(schema.__name__)
         return schema.model_validate(builder(topic, prompt))
 
-    def _StoryBrief(self, topic: str, _: str) -> dict:
-        return {
-            "subject_summary": f"A short documentary about {topic}.", "target_audience": "Curious history fans",
-            "angle": "What the evidence actually shows", "emotional_arc": "curiosity -> tension -> reflection",
-            "key_facts": [{"text": f"{topic} is documented in historical records.", "confidence": "well_established"}],
-            "open_questions": ["What really happened?"], "music_mood": "mystery",
-        }  # fmt: skip
-
-    def _HookSet(self, topic: str, _: str) -> dict:
-        styles = ["shocking", "mysterious", "question", "controversial", "emotional", "curiosity"]
-        return {"hooks": [{"style": s, "text": f"{s.title()} hook: what happened with {topic}?"} for s in styles]}
-
-    def _Script(self, topic: str, _: str) -> dict:
+    def _StoryDraft(self, topic: str, prompt: str) -> dict:
+        forced = re.search(r"verbatim as the FIRST hook: (.+)", prompt)
+        first = forced.group(1).strip() if forced else f"Nobody expected what happened with {topic}."
         return {
             "title": f"The Truth About {topic.title()}"[:80],
-            "hook": f"Nobody expected what happened with {topic}.",
+            "music_mood": "mystery",
+            "hooks": [{"style": "mysterious", "text": first},
+                      {"style": "question", "text": f"What really happened with {topic}?"},
+                      {"style": "shocking", "text": f"The records about {topic} stop mid-sentence."}],
             "beginning": f"It began quietly. Records describe {topic} in only a few lines.",
             "middle": "Then the clues started to pile up. Each one raised a new question, and each answer seemed to "
             "contradict the last.",
             "conclusion": "Historians still debate the details today. What do you think happened?",
             "claims": [{"text": f"{topic} is recorded in contemporary sources.", "confidence": "well_established"}],
-        }
+        }  # fmt: skip
 
-    def _StoryboardDraft(self, topic: str, prompt: str) -> dict:
+    def _StoryboardPlan(self, topic: str, prompt: str) -> dict:
         m = re.search(r"exactly (\d+) scenes", prompt)
         count = int(m.group(1)) if m else 5
-        narr = re.search(r"NARRATION:\s*(.+?)\n\n", prompt, re.S)
-        words = (narr.group(1) if narr else f"This is the story of {topic}. " * count).split()
-        per = max(1, len(words) // count)
         types = ["cinematic_image", "historical_map", "timeline", "parallax", "kinetic_typography", "infographic"]
         scenes = []
         for i in range(count):
-            chunk = words[i * per : (i + 1) * per] if i < count - 1 else words[i * per :]
             scenes.append({
-                "title": f"Scene {i + 1}", "narration": " ".join(chunk) or topic, "visual_type": types[i % len(types)],
-                "visual_description": f"Moody depiction of {topic}", "image_prompt": f"{topic}, cinematic, dramatic light",
+                "title": f"Scene {i + 1}", "visual_type": types[i % len(types)],
+                "image_prompt": f"{topic}, cinematic, dramatic light",
                 "camera_movement": ["slow_zoom_in", "static", "pan_left", "parallax_drift", "static", "static"][i % 6],
                 "effects": [["fog"], [], ["dust"], ["embers"], ["light_rays"], []][i % 6],
-                "transition": "cut" if i == 0 else "crossfade", "emphasis_words": chunk[:1], "mood": "mysterious",
-                "color_palette": ["#0f172a", "#a78bfa", "#38bdf8"], "sound_effects": ["whoosh"] if i else [],
+                "transition": "cut" if i == 0 else "crossfade", "emphasis_words": ["clues"], "music_cue": "steady",
+                "sound_effects": ["whoosh"] if i else [],
                 "visual_data": {"places": [{"name": "London"}, {"name": "New York"}], "draw_route": True,
                                 "events": [{"date": "1587", "label": "Founded"}, {"date": "1590", "label": "Abandoned"}],
                                 "stats": [{"label": "People", "value": 115}]},
@@ -94,7 +83,10 @@ class FixtureLLM:
         return {"scenes": scenes}
 
     def _SceneDraft(self, topic: str, prompt: str) -> dict:
-        return self._StoryboardDraft(topic, "exactly 1 scenes")["scenes"][0] | {"title": "Regenerated scene"}
+        narration = re.search(r"THIS SCENE NARRATION: (.+)", prompt)
+        scene = self._StoryboardPlan(topic, "exactly 1 scenes")["scenes"][0]
+        return scene | {"title": "Regenerated scene", "narration": narration.group(1) if narration else topic,
+                        "visual_description": f"Moody depiction of {topic}", "mood": "mysterious"}  # fmt: skip
 
     def _SeriesPlan(self, topic: str, prompt: str) -> dict:
         m = re.search(r"exactly (\d+) episodes", prompt)

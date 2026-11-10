@@ -1,4 +1,4 @@
-# Feature Comparison Matrix — ReelForge AI (Phase Zero)
+# Feature Comparison Matrix — NaRRAVO (Phase Zero)
 
 Research date: 2026-11-09. Evidence and URLs are in `competitor-analysis.md`.
 
@@ -11,13 +11,13 @@ Research date: 2026-11-09. Evidence and URLs are in `competitor-analysis.md`.
 | partial | Present but limited: by tier, by quality, or only part of the capability |
 | unverified | Not stated on fetched pages, only claimed by third parties, or page blocked |
 
-The **ReelForge (target)** column is a *plan*, not a shipped capability.
+The **NaRRAVO (target)** column is a *plan*, not a shipped capability.
 
 ---
 
 ## A. Faceless / short-form generators
 
-| Feature | FacelessReels | Revid | AutoShorts | Fliki | Pictory | invideo AI | reelforgeai.io | **ReelForge (target)** |
+| Feature | FacelessReels | Revid | AutoShorts | Fliki | Pictory | invideo AI | reelforgeai.io | **NaRRAVO (target)** |
 |---|---|---|---|---|---|---|---|---|
 | Idea/prompt to full video | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | URL/blog/doc to video | unverified | ✓ | ✗ | ✓ | ✓ | unverified | unverified | ✓ |
@@ -97,7 +97,7 @@ The **ReelForge (target)** column is a *plan*, not a shipped capability.
 
 ## D. Open-source projects
 
-| Feature | MoneyPrinterTurbo | ShortGPT | short-video-maker | **ReelForge (target)** |
+| Feature | MoneyPrinterTurbo | ShortGPT | short-video-maker | **NaRRAVO (target)** |
 |---|---|---|---|---|
 | License | MIT | MIT | MIT | OSS (TBD by license research) |
 | Local LLM (e.g. Ollama) | ✓ | ✗ (OpenAI) | ✗ (scenes supplied) | ✓ |
@@ -138,7 +138,7 @@ The **ReelForge (target)** column is a *plan*, not a shipped capability.
 | Renderforest | 20 credits, 480p, watermark | $15/mo ($9 annual) | $59/mo | Credits (cost shown) |
 | Vidnoz | ~60 credits/day, 720p, watermark | unverified | Enterprise | Credits |
 | MoneyPrinterTurbo / ShortGPT / short-video-maker | Free (MIT) | — | — | Bring-your-own API keys (optional) |
-| **ReelForge (target)** | **Everything, no watermark** | — | — | Local compute only |
+| **NaRRAVO (target)** | **Everything, no watermark** | — | — | Local compute only |
 
 ## F. Feature-gap heatmap (how many of the 22 products verifiably offer each feature)
 

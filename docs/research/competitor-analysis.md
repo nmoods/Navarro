@@ -1,4 +1,4 @@
-# Competitor Analysis — ReelForge AI (Phase Zero)
+# Competitor Analysis — NaRRAVO (Phase Zero)
 
 - **Research date:** 2026-11-09. All prices are USD and were seen on that date unless stated otherwise.
 - **Method:** Public pages only: vendor home and pricing pages, Trustpilot, G2/Capterra summaries, GitHub READMEs and press coverage. Nothing behind a login or paywall was accessed.
@@ -241,7 +241,7 @@ Sources: https://autoshorts.ai ; https://www.trustpilot.com/review/autoshorts.ai
 | Weaknesses | Requires source footage. |
 | User complaints | Trustpilot 4.0 from 520 reviews. "customer service is nil", credits deducted while waiting 5 days (2026-10-28). "they want you to buy more credits" (2026-10-06). Free version "completely deletes any saved progress" (2026-10-06). |
 | Missing features | Faceless generation from an idea. Local processing. |
-| Opportunity | **Content repurposing**: ReelForge long-form story to multiple shorts, using Opus-style moment scoring on its own scripts. |
+| Opportunity | **Content repurposing**: NaRRAVO long-form story to multiple shorts, using Opus-style moment scoring on its own scripts. |
 
 Sources: https://www.opus.pro/ ; https://www.opus.pro/pricing ; https://www.trustpilot.com/review/opus.pro
 
@@ -395,7 +395,7 @@ Sources: https://lumen5.com/ ; https://www.trustpilot.com/review/lumen5.com ; ht
 | Weaknesses | Generic, templated output. Confusing pricing. |
 | User complaints | G2 4.6 from 135 reviews; Capterra 4.2 from 29. Output "can look generic and formulaic" (review blog). Characters meant to be a couple rendered as the same gender (Capterra). Rendering lag. |
 | Missing features | Fact checking, continuity memory, local use. |
-| Opportunity | Show that kinetic type and camera moves matter. ReelForge should match this with open-source 2.5D motion. |
+| Opportunity | Show that kinetic type and camera moves matter. NaRRAVO should match this with open-source 2.5D motion. |
 
 Sources: https://www.steve.ai/ ; https://app.steve.ai/pricing ; https://www.capterra.com/p/253410/Steve-AI/reviews ; https://g2.com/products/steve-ai-steve-ai/reviews?page=10
 
@@ -556,7 +556,7 @@ Source: https://www.submagic.co/pricing
 | Script gen | "Script to video" tool linked. Detail unverified. |
 | Scheduling | Not mentioned. |
 | Pricing | Third parties: Pro about $9.99/mo (iOS), Max $24.99, Frontier $69.99. Free has a watermark and 720p. **unverified.** |
-| Opportunity | Avatar-centric. Shows demand for "AI edit in one tap", which ReelForge can satisfy with local presets. |
+| Opportunity | Avatar-centric. Shows demand for "AI edit in one tap", which NaRRAVO can satisfy with local presets. |
 
 Sources: https://www.captions.ai/ ; https://www.eesel.ai/blog/captions-ai ; https://aitoolsatlas.ai/tools/captions-mirage/pricing
 
@@ -583,7 +583,7 @@ Source: https://www.vidnoz.com/pricing.html
 | Hardware | Minimum 4-core CPU and 4 GB RAM. GPU optional. |
 | Weaknesses (README) | 3 GB Whisper model download issues. FFmpeg path issues. Windows path restrictions. Bundled music may infringe copyright. Many features need paid API keys. |
 | Missing | Scene editor, storyboard, image generation per scene with style consistency, cinematic motion, fact checking, series memory. |
-| Opportunity | The closest OSS analogue, but it is **stock-footage montage**, not story or cinematic. ReelForge differentiates on storyboard, scene control and 2.5D motion. |
+| Opportunity | The closest OSS analogue, but it is **stock-footage montage**, not story or cinematic. NaRRAVO differentiates on storyboard, scene control and 2.5D motion. |
 
 Source: https://github.com/harry0703/MoneyPrinterTurbo
 
@@ -613,7 +613,7 @@ Source: https://github.com/gyoridavid/short-video-maker
 |---|---|
 | Summary | A commercial faceless generator: topic, then hook-first script, then 6 voices, then a visual per line (8 styles), then captions and music, then vertical MP4, then post or schedule, Autopilot, Director Mode, API. |
 | Pricing (2026-11-09) | Explorer free (3 videos/mo, 45 s, 720p, watermark). Creator $17. Hustler $37. Mogul $67. Empire $147. |
-| Implication | **Direct trademark and SEO conflict** with the planned project name. Other unrelated "ReelForge" products also exist on Product Hunt and elsewhere. |
+| Implication | **Direct trademark and SEO conflict** with the original working name (ReelForge), which is why the project was renamed to NaRRAVO. Other unrelated "ReelForge" products also exist on Product Hunt and elsewhere. |
 
 Sources: https://reelforgeai.io/ ; https://www.producthunt.com/products/reelforge/launches
 

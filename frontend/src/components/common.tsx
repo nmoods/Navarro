@@ -97,12 +97,17 @@ export function AudioButton({ load, label, className }: { load: () => Promise<st
 export function ProviderBanner({ kinds }: { kinds?: string[] }) {
   const { data } = useProviders();
   if (!data) return null;
-  const down = data.filter((p) => !p.available && (!kinds || kinds.includes(p.kind)));
+  // A capability is offline only when none of its AI providers is up (OpenVINO covers for ComfyUI, and the
+  // procedural fallback is not AI, so it never counts as "up").
+  const ai = data.filter((p) => p.capabilities?.ai !== false && (!kinds || kinds.includes(p.kind)));
+  const down = [...new Set(ai.map((p) => p.kind))]
+    .filter((kind) => !ai.some((p) => p.kind === kind && p.available))
+    .map((kind) => ai.find((p) => p.kind === kind)!);
   const test = data.filter((p) => p.is_test_double);
   if (!down.length && !test.length) return null;
   const names: Record<string, string> = {
     llm: "Story Director (Ollama)",
-    image: "image generation (ComfyUI)",
+    image: "image generation (OpenVINO / ComfyUI)",
     tts: "voice (Kokoro)",
     stt: "caption timing (Whisper)",
     research: "fact checking (Wikipedia)",
@@ -112,7 +117,7 @@ export function ProviderBanner({ kinds }: { kinds?: string[] }) {
       {down.length > 0 && (
         <p>
           <span className="text-warn">Offline: {down.map((p) => names[p.kind] ?? p.name).join(", ")}.</span>{" "}
-          {down.some((p) => p.kind === "image") && "Scenes will use procedural art until ComfyUI is back. "}
+          {down.some((p) => p.kind === "image") && "Scenes will use procedural art until an image engine is back. "}
           {down.some((p) => p.kind === "llm") && "You can still edit scenes by hand and render. "}
           <Link to="/settings#ai" className="text-uv underline-offset-4 hover:underline">
             See AI status

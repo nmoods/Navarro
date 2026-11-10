@@ -37,7 +37,7 @@ def build_workflow(req: ImageRequest, checkpoint: str, lora: str | None, steps: 
             },
         },  # fmt: skip
         "7": {"class_type": "VAEDecode", "inputs": {"samples": ["6", 0], "vae": ["1", 2]}},
-        "8": {"class_type": "SaveImage", "inputs": {"images": ["7", 0], "filename_prefix": "reelforge"}},
+        "8": {"class_type": "SaveImage", "inputs": {"images": ["7", 0], "filename_prefix": "narravo"}},
     }
     return wf
 

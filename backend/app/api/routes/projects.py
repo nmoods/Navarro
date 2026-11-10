@@ -147,8 +147,8 @@ def select_hook(project_id: uuid.UUID, body: SelectHookIn, session: DbSession, s
     script = latest_script(session, project_id)
     if script is None or body.hook_index >= len(script.hooks):
         raise ValidationFailedError("Unknown hook")
-    style = script.hooks[body.hook_index].get("style")
-    return _enqueue(session, settings, user, project, JobType.STORY, {"hook_style": style})
+    hook = script.hooks[body.hook_index]
+    return _enqueue(session, settings, user, project, JobType.STORY, {"hook_style": hook.get("style"), "hook_text": hook.get("text")})
 
 
 @router.post("/{project_id}/produce", response_model=JobOut, status_code=status.HTTP_202_ACCEPTED)

@@ -42,16 +42,25 @@ from app.media.assembler import SceneTiming, assemble, plan_timeline
 from app.media.audio.mixer import mix_timeline
 from app.media.ffmpeg import media_duration
 from app.media.scene_renderer import render_scene, render_still
-from app.media.spec import AudioCue, CaptionStyle, CaptionWord, RenderSettings, SceneSpec, SfxCue, TimelineSpec
+from app.media.spec import (
+    AudioCue,
+    CaptionStyle,
+    CaptionWord,
+    RenderSettings,
+    SceneSpec,
+    SfxCue,
+    TimelineSpec,
+)
 from app.media.visuals.common import draw_text
 from app.workers.context import JobContext
 
-logger = logging.getLogger("reelforge.production")
+logger = logging.getLogger("narravo.production")
 
 # SD 1.5 is trained at 512 px; very elongated canvases duplicate subjects (two heads, two towers). Generate at
 # moderate aspect ratios and let the compositor crop to the output format.
 IMAGE_SIZES = {AspectRatio.VERTICAL: (512, 768), AspectRatio.LANDSCAPE: (768, 512), AspectRatio.SQUARE: (576, 576)}
 PORTRAIT_SIZE = (512, 640)
+NON_AI_IMAGES = frozenset({"procedural", "fixture_image"})
 _CAPTION_FIELDS = set(CaptionStyle.__dataclass_fields__)
 
 
@@ -133,8 +142,10 @@ class ProductionService:
             w, h = PORTRAIT_SIZE
         seed = self._character_seed(project, scene)
         prompt = self.image_prompt(project, scene)
-        digest = hash_inputs("image", provider.name, getattr(provider, "checkpoint", ""), prompt, prompts.NEGATIVE_PROMPT, w, h, seed)
-        if existing and existing[0].input_hash == digest:
+        # The key is what the image should show, not which engine drew it: switching image engines must not
+        # redraw every unchanged scene. A placeholder drawn while AI was offline is still upgraded later.
+        digest = hash_inputs("image", prompt, prompts.NEGATIVE_PROMPT, w, h, seed)
+        if existing and existing[0].input_hash == digest and (existing[0].provider not in NON_AI_IMAGES or provider.name in NON_AI_IMAGES):
             return existing[1]
         request = ImageRequest(prompt, prompts.NEGATIVE_PROMPT, w, h, seed)
         if provider.name in ("procedural", "fixture_image"):
@@ -282,7 +293,7 @@ class ProductionService:
         mix = mix_timeline(timeline, total, self.work / "mix.wav")
         self.ctx.stage(JobStatus.RENDERING, 90, "Assembling transitions and encoding MP4")
         video_path = assemble(clips, timings, transitions, mix, self.work / "final.mp4", rs, total,
-                              timeout=self.settings.render_timeout_seconds, threads=self.settings.ffmpeg_threads,
+                              timeout=self.settings.render_timeout_seconds, threads=0,  # 0 = all cores: nothing else runs during assembly
                               cancel_check=self.ctx.cancelled)  # fmt: skip
 
         self.ctx.stage(JobStatus.FINALIZING, 96, "Generating thumbnail and saving export")
@@ -365,4 +376,4 @@ def _render_to(spec: SceneSpec, rs: RenderSettings, cached: Path, threads: int) 
 
 
 def _slug(text: str) -> str:
-    return "".join(c if c.isalnum() else "-" for c in text.lower()).strip("-")[:60] or "reelforge-video"
+    return "".join(c if c.isalnum() else "-" for c in text.lower()).strip("-")[:60] or "narravo-video"

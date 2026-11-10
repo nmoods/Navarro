@@ -18,7 +18,7 @@ from app.application.ports import ProviderHealth, Source
 _API = "https://en.wikipedia.org/w/api.php"
 _TAGS = re.compile(r"<[^>]+>")
 MISSING_CONTACT = (
-    "Set REELFORGE_RESEARCH_CONTACT to an email or URL: Wikimedia's API policy requires a contact in the "
+    "Set NARRAVO_RESEARCH_CONTACT to an email or URL: Wikimedia's API policy requires a contact in the "
     "User-Agent. Until then scripts are written without source checks and claims stay unverified."
 )
 
@@ -32,7 +32,7 @@ class WikipediaResearchProvider:
 
     def __init__(self, contact: str | None, min_interval: float = 0.5) -> None:
         self.contact = (contact or "").strip()
-        self.headers = {"User-Agent": f"ReelForgeAI/0.1 (self-hosted fact-check module; contact: {self.contact}) httpx"}
+        self.headers = {"User-Agent": f"NaRRAVO/0.1 (self-hosted fact-check module; contact: {self.contact}) httpx"}
         self.min_interval = min_interval
         self._last = 0.0
 

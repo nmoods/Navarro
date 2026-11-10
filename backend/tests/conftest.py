@@ -9,21 +9,21 @@ from pathlib import Path
 
 import pytest
 
-_TMP = Path(tempfile.mkdtemp(prefix="reelforge-test-"))
+_TMP = Path(tempfile.mkdtemp(prefix="narravo-test-"))
 os.environ.update({
-    "REELFORGE_APP_ENV": "test",
-    "REELFORGE_DATABASE_URL": f"sqlite:///{(_TMP / 'test.db').as_posix()}",
-    "REELFORGE_STORAGE_ROOT": str(_TMP / "storage"),
-    "REELFORGE_WORK_ROOT": str(_TMP / "work"),
-    "REELFORGE_LLM_PROVIDER": "fixture",
-    "REELFORGE_IMAGE_PROVIDER": "fixture",
-    "REELFORGE_TTS_PROVIDER": "fixture",
-    "REELFORGE_STT_PROVIDER": "fixture",
-    "REELFORGE_EMBEDDED_WORKER": "false",
-    "REELFORGE_JWT_SECRET": "test-secret-0123456789abcdef0123456789abcdef",
-    "REELFORGE_RATE_LIMIT_PER_MINUTE": "10000",
-    "REELFORGE_GENERATION_RATE_LIMIT_PER_HOUR": "1000",
-    "REELFORGE_MAX_ACTIVE_JOBS_PER_USER": "50",
+    "NARRAVO_APP_ENV": "test",
+    "NARRAVO_DATABASE_URL": f"sqlite:///{(_TMP / 'test.db').as_posix()}",
+    "NARRAVO_STORAGE_ROOT": str(_TMP / "storage"),
+    "NARRAVO_WORK_ROOT": str(_TMP / "work"),
+    "NARRAVO_LLM_PROVIDER": "fixture",
+    "NARRAVO_IMAGE_PROVIDER": "fixture",
+    "NARRAVO_TTS_PROVIDER": "fixture",
+    "NARRAVO_STT_PROVIDER": "fixture",
+    "NARRAVO_EMBEDDED_WORKER": "false",
+    "NARRAVO_JWT_SECRET": "test-secret-0123456789abcdef0123456789abcdef",
+    "NARRAVO_RATE_LIMIT_PER_MINUTE": "10000",
+    "NARRAVO_GENERATION_RATE_LIMIT_PER_HOUR": "1000",
+    "NARRAVO_MAX_ACTIVE_JOBS_PER_USER": "50",
 })  # fmt: skip
 
 from fastapi.testclient import TestClient  # noqa: E402

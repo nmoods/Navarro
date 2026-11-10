@@ -1,11 +1,11 @@
-"""AI Story Director: brief -> hooks -> script -> storyboard -> fact check. Pure orchestration over ports
+"""AI Story Director: story (hooks, narration, claims) -> storyboard -> fact check. Pure orchestration over ports
 (no database), so it is provider-agnostic and unit-testable with the fixture LLM."""
 
 from __future__ import annotations
 
 import logging
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from app.application import prompts
 from app.application.direction import polish_scene, polish_storyboard
@@ -16,19 +16,17 @@ from app.domain.enums import ClaimVerdict, HookStyle
 from app.domain.story import (
     Claim,
     ClaimCheck,
-    Hook,
-    HookSet,
     SceneDraft,
-    Script,
     SeriesPlan,
     StoryboardDraft,
-    StoryBrief,
+    StoryboardPlan,
+    StoryDraft,
     TopicIdeas,
     scene_count_for_duration,
     words_for_duration,
 )
 
-logger = logging.getLogger("reelforge.director")
+logger = logging.getLogger("narravo.director")
 _TITLE_STOP = frozenset("the a an of and in on at to for with from how why what who when where is was".split())
 
 
@@ -45,16 +43,7 @@ class CreativeContext:
     dna_notes: str = ""
     continuity: str = ""
     preferred_hook_style: str | None = None
-
-
-@dataclass
-class StoryResult:
-    brief: StoryBrief
-    hooks: list[Hook]
-    selected_hook: int
-    script: Script
-    storyboard: StoryboardDraft
-    sources: list[Source] = field(default_factory=list)
+    forced_hook: str | None = None  # Hook Lab: the exact opening line the creator picked
 
 
 class StoryDirector:
@@ -67,76 +56,58 @@ class StoryDirector:
         if not self.research:
             return "", []
         try:
-            hits = self.research.search_sources(topic, limit=2)
-            sources = [s for s in (self.research.retrieve_source(h.title) for h in hits[:2]) if s and s.excerpt]
+            hits = self.research.search_sources(topic, limit=1)  # one focused article; a second often mixes in another story
+            sources = [s for s in (self.research.retrieve_source(h.title) for h in hits[:1]) if s and s.excerpt]
         except Exception as exc:  # research is optional: degrade, never fail the story
             logger.warning("research unavailable: %s", exc)
             return "", []
-        text = "\n\n".join(f"[{s.title}] {s.excerpt[:2500]}" for s in sources)
+        text = "\n\n".join(f"[{s.title}] {s.excerpt[:4000]}" for s in sources)
         return text[:4500], sources
 
     # -- steps ------------------------------------------------------------------------------------------
-    def generate_brief(self, ctx: CreativeContext, reference: str) -> StoryBrief:
-        return self.llm.complete_json(
-            prompts.DIRECTOR_SYSTEM,
-            prompts.brief_prompt(ctx.topic, ctx.tone, ctx.platform, ctx.language, reference),
-            StoryBrief,
-            temperature=0.4,
-        )
-
-    def generate_hooks(self, ctx: CreativeContext, brief: StoryBrief) -> list[Hook]:
-        result = self.llm.complete_json(
-            prompts.DIRECTOR_SYSTEM, prompts.hooks_prompt(ctx.topic, brief.model_dump_json()), HookSet, temperature=0.9
-        )
-        return result.hooks
-
-    @staticmethod
-    def pick_hook(hooks: list[Hook], ctx: CreativeContext) -> int:
-        preferred = ctx.preferred_hook_style or (
-            HookStyle.MYSTERIOUS if ctx.tone in ("suspenseful", "dramatic") else HookStyle.CURIOSITY
-        )
-        for i, hook in enumerate(hooks):
-            if hook.style == preferred:
-                return i
-        return 0
-
-    def generate_script(self, ctx: CreativeContext, brief: StoryBrief, hook: str) -> Script:
+    def write_story(self, ctx: CreativeContext, reference: str) -> StoryDraft:
+        """Angle, three hooks, narration and claims in one LLM call (one pass is ~3x faster than four)."""
         words = words_for_duration(ctx.duration)
-        prompt = prompts.script_prompt(ctx.topic, brief.model_dump_json(), hook, words, ctx.tone, ctx.language, ctx.dna_notes)
-        script = self.llm.complete_json(prompts.DIRECTOR_SYSTEM, prompt, Script, temperature=0.75)
-        actual = len(script.full_text.split())
+        hook_style = ctx.preferred_hook_style or (
+            HookStyle.MYSTERIOUS.value if ctx.tone in ("suspenseful", "dramatic") else HookStyle.CURIOSITY.value
+        )
+        prompt = prompts.story_prompt(ctx.topic, ctx.tone, ctx.language, reference, words, ctx.dna_notes, hook_style,
+                                      ctx.forced_hook)  # fmt: skip
+        draft = self.llm.complete_json(prompts.DIRECTOR_SYSTEM, prompt, StoryDraft, temperature=0.75)
+        actual = len(draft.to_script().full_text.split())
         if not (0.6 * words <= actual <= 1.5 * words):
             logger.info("script length %d far from target %d, asking for a revision", actual, words)
             prompt += f"\n\nYour previous draft had {actual} words. Rewrite it to about {words} words."
-            script = self.llm.complete_json(prompts.DIRECTOR_SYSTEM, prompt, Script, temperature=0.6)
-        script.hook = hook or script.hook
-        return script
+            draft = self.llm.complete_json(prompts.DIRECTOR_SYSTEM, prompt, StoryDraft, temperature=0.6)
+        if ctx.forced_hook:
+            first = draft.hooks[0].model_copy(update={"text": ctx.forced_hook})
+            draft = draft.model_copy(update={"hooks": [first, *draft.hooks[1:]]})
+        return draft
 
-    def generate_storyboard(self, ctx: CreativeContext, script: Script) -> StoryboardDraft:
-        scenes_text = split_into_scenes(script.full_text, scene_count_for_duration(ctx.duration))
-        draft = self.llm.complete_json(
+    def generate_storyboard(self, ctx: CreativeContext, full_text: str) -> StoryboardDraft:
+        scenes_text = split_into_scenes(full_text, scene_count_for_duration(ctx.duration))
+        plan = self.llm.complete_json(
             prompts.DIRECTOR_SYSTEM,
             prompts.storyboard_prompt(ctx.topic, ctx.visual_style, scenes_text, ctx.dna_notes, ctx.continuity),
-            StoryboardDraft,
+            StoryboardPlan,
             temperature=0.7,
         )
-        return polish_storyboard(self.enforce_narration(draft, scenes_text), ctx.visual_style)
+        return polish_storyboard(self.attach_narration(plan, scenes_text), ctx.visual_style)
 
     @staticmethod
-    def enforce_narration(draft: StoryboardDraft, scenes_text: list[str]) -> StoryboardDraft:
-        """Guarantee the approved script survives verbatim: narration always comes from our split."""
-        scenes = list(draft.scenes)
+    def attach_narration(plan: StoryboardPlan, scenes_text: list[str]) -> StoryboardDraft:
+        """The approved script survives verbatim: narration always comes from our split, never from the LLM."""
+        scenes = list(plan.scenes)
+        if not scenes:
+            raise ProviderError("llm", "Storyboard contained no scenes")
         while len(scenes) < len(scenes_text):  # small models sometimes return fewer scenes
-            template = scenes[-1] if scenes else None
-            if template is None:
-                raise ProviderError("llm", "Storyboard contained no scenes")
-            scenes.append(template.model_copy(update={"title": f"Scene {len(scenes) + 1}"}))
-        scenes = scenes[: len(scenes_text)]
+            scenes.append(scenes[-1].model_copy(update={"title": f"Scene {len(scenes) + 1}"}))
         fixed = []
-        for scene, text in zip(scenes, scenes_text, strict=True):
+        for scene, text in zip(scenes[: len(scenes_text)], scenes_text, strict=True):
+            draft = scene.to_draft(text)
             words = set(text.lower().split())
-            emphasis = [w for w in scene.emphasis_words if w in words or any(w in t for t in words)][:3]
-            fixed.append(scene.model_copy(update={"narration": text, "emphasis_words": emphasis}))
+            emphasis = [w for w in draft.emphasis_words if w in words or any(w in t for t in words)][:3]
+            fixed.append(draft.model_copy(update={"emphasis_words": emphasis}))
         return StoryboardDraft(scenes=fixed)
 
     def regenerate_scene(self, ctx: CreativeContext, narration: str, previous: str, following: str, instruction: str,
@@ -151,7 +122,7 @@ class StoryDirector:
             scene = scene.model_copy(update={"narration": narration})
         return polish_scene(scene, ctx.visual_style, 0, None)
 
-    def fact_check(self, claims: list[Claim], max_claims: int = 6) -> list[Claim]:
+    def fact_check(self, claims: list[Claim], max_claims: int = 3) -> list[Claim]:
         if not self.research:
             return claims
         cache: dict[str, Source | None] = {}

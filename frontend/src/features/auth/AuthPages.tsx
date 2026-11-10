@@ -33,7 +33,7 @@ function AuthFrame({ title, children, footer }: { title: string; children: React
       <div className="beam-glow pointer-events-none fixed inset-0 -z-10 opacity-60" aria-hidden />
       <main id="main" className="w-full max-w-sm">
         <Link to="/" className="mb-10 flex items-center gap-2 font-heading text-lg font-semibold">
-          <Clapperboard className="size-5 text-uv" aria-hidden /> ReelForge
+          <Clapperboard className="size-5 text-uv" aria-hidden /> NaRRAVO
         </Link>
         <h1 className="text-3xl font-semibold">{title}</h1>
         <div className="mt-8">{children}</div>

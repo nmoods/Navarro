@@ -27,7 +27,7 @@ from app.infrastructure.database.models import Profile, RefreshToken, User
 from app.schemas.core import LoginIn, RegisterIn, TokenOut, UserOut
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-COOKIE = "rf_refresh"
+COOKIE = "nv_refresh"
 COOKIE_PATH = "/api/v1/auth"
 REUSE_GRACE_SECONDS = 20
 _DUMMY_HASH = hash_password("timing-equaliser-not-a-real-password")
@@ -40,7 +40,7 @@ def _local_only(settings: Settings) -> None:
 
 def _csrf_guard(x_requested_with: str | None) -> None:
     # Cookie-authenticated endpoints require a custom header, which cross-site forms cannot send.
-    if x_requested_with != "reelforge":
+    if x_requested_with != "narravo":
         raise PermissionDeniedError("Missing X-Requested-With header")
 
 

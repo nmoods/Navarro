@@ -14,7 +14,13 @@ from app.application.projects import ProjectInput, create_project
 from app.application.story_director import StoryDirector
 from app.core.errors import ConflictError, ValidationFailedError
 from app.domain.enums import ACTIVE_JOB_STATUSES, JobType, SeriesStatus
-from app.infrastructure.database.models import ContentIdea, ContentSeries, GenerationJob, SeriesEpisode, StoryDnaProfile
+from app.infrastructure.database.models import (
+    ContentIdea,
+    ContentSeries,
+    GenerationJob,
+    SeriesEpisode,
+    StoryDnaProfile,
+)
 from app.schemas.core import (
     EpisodeOut,
     EpisodeUpdate,

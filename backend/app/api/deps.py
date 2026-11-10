@@ -22,7 +22,7 @@ from app.infrastructure.database.session import get_session_factory
 from app.infrastructure.providers import Providers, get_providers
 from app.infrastructure.storage.base import Storage, get_storage
 
-logger = logging.getLogger("reelforge.auth")
+logger = logging.getLogger("narravo.auth")
 _bearer = HTTPBearer(auto_error=False)
 M = TypeVar("M")
 

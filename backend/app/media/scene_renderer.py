@@ -27,7 +27,7 @@ from app.media.visuals.common import draw_text
 from app.media.visuals.map import MapVisual
 from app.media.visuals.stills import KineticTypography, newspaper_still, procedural_backdrop
 
-logger = logging.getLogger("reelforge.render")
+logger = logging.getLogger("narravo.render")
 
 FrameFn = Callable[[float], np.ndarray]
 IMAGE_TYPES = {"cinematic_image", "parallax", "character_portrait"}

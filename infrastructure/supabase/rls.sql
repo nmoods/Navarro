@@ -1,10 +1,10 @@
--- ReelForge AI: Row Level Security for Supabase PostgreSQL.
+-- NaRRAVO: Row Level Security for Supabase PostgreSQL.
 --
 -- Apply AFTER `alembic upgrade head` has created the schema:
 --   psql "$SUPABASE_DB_URL" -f infrastructure/supabase/rls.sql
 --
 -- Model:
---  * The ReelForge API connects with a privileged role (table owner / service role) that bypasses RLS and
+--  * The NaRRAVO API connects with a privileged role (table owner / service role) that bypasses RLS and
 --    enforces ownership in application code on every query (see backend/app/api/deps.py::owned).
 --  * RLS is defence in depth: if anyone reaches the database through Supabase's auto-generated REST/GraphQL
 --    APIs with an end-user JWT (or the anon key), they can only ever see their own rows, and never write

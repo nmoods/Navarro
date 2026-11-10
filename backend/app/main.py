@@ -15,7 +15,7 @@ from app.core.errors import install_error_handlers
 from app.core.logging import configure_logging
 from app.core.middleware import SecurityMiddleware
 
-logger = logging.getLogger("reelforge")
+logger = logging.getLogger("narravo")
 
 BUILTIN_TEMPLATES = [
     ("History Mystery", "mystery", {"visual_style": "dark_mystery", "story_tone": "suspenseful", "voice_id": "am_michael",
@@ -33,15 +33,16 @@ BUILTIN_TEMPLATES = [
 
 
 def run_migrations() -> None:
-    from alembic import command
     from alembic.config import Config
 
+    from alembic import command
     from app.core.config import BACKEND_ROOT
     from app.infrastructure.database.session import get_engine
 
     get_engine()  # creates the SQLite folder if needed before Alembic connects
     cfg = Config(str(BACKEND_ROOT / "alembic.ini"))
     cfg.set_main_option("script_location", str(BACKEND_ROOT / "alembic"))
+    cfg.attributes["configure_logger"] = False  # keep the app's JSON logging (fileConfig would mute INFO logs)
     command.upgrade(cfg, "head")
 
 
@@ -73,9 +74,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         from app.infrastructure.storage.base import get_storage
         from app.workers.runner import Worker
 
-        worker = Worker(settings, get_session_factory(), get_providers(), get_storage(settings))
+        providers = get_providers()
+        providers.warm_up()  # load in-process models now: loading blocks Python, which would freeze requests later
+        worker = Worker(settings, get_session_factory(), providers, get_storage(settings))
         worker.start_background()
-    logger.info("ReelForge API started (env=%s, auth=%s)", settings.app_env.value, settings.auth_mode.value)
+    logger.info("NaRRAVO API started (env=%s, auth=%s)", settings.app_env.value, settings.auth_mode.value)
     yield
     if worker:
         worker.stop()
@@ -85,7 +88,7 @@ def create_app() -> FastAPI:
     settings = get_settings()
     prod = settings.app_env is AppEnv.PRODUCTION
     app = FastAPI(
-        title="ReelForge AI API", version="0.1.0", lifespan=lifespan,
+        title="NaRRAVO API", version="0.1.0", lifespan=lifespan,
         docs_url=None if prod else "/api/docs", redoc_url=None, openapi_url=None if prod else "/api/openapi.json",
     )  # fmt: skip
     install_error_handlers(app)
@@ -104,7 +107,7 @@ def create_app() -> FastAPI:
 
     @api.get("/health", tags=["system"])
     def health() -> dict:
-        return {"status": "ok", "service": "reelforge-api"}
+        return {"status": "ok", "service": "narravo-api"}
 
     app.include_router(api)
     return app

@@ -28,7 +28,7 @@ from app.workers import queue
 from app.workers.context import JobContext, JobTimeoutError
 from app.workers.handlers import HANDLERS, on_job_finished
 
-logger = logging.getLogger("reelforge.worker")
+logger = logging.getLogger("narravo.worker")
 
 
 class Worker:
@@ -41,7 +41,7 @@ class Worker:
         self._thread: threading.Thread | None = None
 
     def start_background(self) -> None:
-        self._thread = threading.Thread(target=self.run_forever, name="reelforge-worker", daemon=True)
+        self._thread = threading.Thread(target=self.run_forever, name="narravo-worker", daemon=True)
         self._thread.start()
 
     def stop(self) -> None:

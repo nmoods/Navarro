@@ -1,4 +1,4 @@
-# ReelForge AI — Free Infrastructure Evaluation
+# NaRRAVO — Free Infrastructure Evaluation
 
 - Research date: 2026-11-09. Quotas come from official pricing and limits pages fetched on that date. Free tiers change often, so re-check before launch.
 - Principle: **no billing features and no paid AI APIs**. The free tiers host the *web app, metadata and media*. **AI inference runs on the operator's own machine (local worker).**
@@ -95,10 +95,10 @@ Facts (https://supabase.com/docs/guides/database/postgres/row-level-security):
 - "Enable RLS on every table in an exposed schema. A table in an exposed schema without RLS is readable and writable by any role with a grant on it."
 - `service_role` (used by secret keys) has **`bypassrls`**, and `postgres` also bypasses RLS. A secret key bypasses RLS only when the request carries no user token.
 
-Recommended pattern for ReelForge:
+Recommended pattern for NaRRAVO:
 1. **Enable RLS on every table in `public`** and **write owner policies** (`user_id = (select auth.uid())`, the cached initPlan form). This keeps the database safe if the browser ever uses supabase-js or the Data API directly. Also **revoke default grants from `anon`** on tables that should never be public. If the frontend never uses the Data API, **remove the app schema from the exposed schemas** (Securing your API) as defence in depth.
 2. Put app tables in a **non-exposed schema** (for example `app`) accessed only by the backend.
-3. The backend connects with a **dedicated least-privilege role** (for example `reelforge_api`, `NOINHERIT`, no `BYPASSRLS`, grants only on `app.*`), not `postgres` or `service_role`. It always filters by the verified `user_id` in SQLAlchemy queries (repository layer enforces tenant scoping).
+3. The backend connects with a **dedicated least-privilege role** (for example `narravo_api`, `NOINHERIT`, no `BYPASSRLS`, grants only on `app.*`), not `postgres` or `service_role`. It always filters by the verified `user_id` in SQLAlchemy queries (repository layer enforces tenant scoping).
 4. Optional belt-and-braces: per transaction, `SET LOCAL role authenticated; SELECT set_config('request.jwt.claims', '<verified claims json>', true);` so that the **same RLS policies apply to backend queries**. This works with Supavisor in transaction mode because `SET LOCAL` is transaction-scoped.
 5. Background workers (render jobs) that legitimately act across users use a **separate** role with `BYPASSRLS` (or `SECURITY DEFINER` functions in a **non-exposed** schema). Its credentials never leave the worker host. Supabase warns: "Never share login credentials for any Postgres Role with this privilege."
 6. Never put `SECURITY DEFINER` functions in an exposed schema, because they are callable over the Data API with the creator's privileges.

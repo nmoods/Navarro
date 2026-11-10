@@ -1,14 +1,16 @@
-import { useQuery } from "@tanstack/react-query";
-import { Film, Plus } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { Film, Plus, Sparkles } from "lucide-react";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Page } from "@/app/AppShell";
 import { EmptyState, ErrorNotice, PageHeader, ProviderBanner, StatusDot } from "@/components/common";
 import { JobProgress } from "@/components/JobProgress";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { keys } from "@/hooks/queries";
 import { STAGE_LABEL, isTerminal, label, relativeTime, timecode } from "@/lib/format";
-import { accountApi } from "@/services/endpoints";
+import { accountApi, projectsApi } from "@/services/endpoints";
 import { useAuth } from "@/stores/auth";
 import type { Project } from "@/types/api";
 
@@ -31,6 +33,36 @@ export function ProjectTile({ project }: { project: Project }) {
   );
 }
 
+/** One line, one button: an idea becomes a finished video with the default look and voice. */
+export function QuickCreate() {
+  const navigate = useNavigate();
+  const [topic, setTopic] = useState("");
+  const create = useMutation({
+    mutationFn: () => projectsApi.create({ topic: topic.trim(), language: "en", duration_seconds: 45, aspect_ratio: "9:16", platform: "generic", auto_produce: true }),
+    onSuccess: (project) => navigate(`/projects/${project.id}`),
+  });
+  const tooShort = topic.trim().length < 3;
+  return (
+    <form
+      onSubmit={(e) => { e.preventDefault(); if (!tooShort) create.mutate(); }}
+      className="mb-10 rounded-xl border border-line bg-surface p-5"
+      aria-label="Quick video"
+    >
+      <label htmlFor="quick-topic" className="text-sm text-subtle">What is your next video about?</label>
+      <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+        <Input id="quick-topic" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="Why the Mary Celeste was found empty" className="h-11 text-base" maxLength={500} />
+        <Button type="submit" size="lg" className="h-11" disabled={tooShort || create.isPending}>
+          <Sparkles className="size-4" /> {create.isPending ? "Starting…" : "Make my video"}
+        </Button>
+      </div>
+      <p className="mt-2 text-xs text-faint">
+        A 45-second vertical video with the default look and voice. <Link to={topic.trim() ? `/create?topic=${encodeURIComponent(topic.trim())}` : "/create"} className="text-uv hover:underline">Choose length, format and style</Link>
+      </p>
+      {create.error ? <ErrorNotice error={create.error} className="mt-3" /> : null}
+    </form>
+  );
+}
+
 export default function DashboardPage() {
   const user = useAuth((s) => s.user);
   const { data, isLoading, error } = useQuery({ queryKey: keys.dashboard, queryFn: accountApi.dashboard, refetchInterval: 5000 });
@@ -49,6 +81,7 @@ export default function DashboardPage() {
       />
       <ProviderBanner />
       {error ? <ErrorNotice error={error} /> : null}
+      <QuickCreate />
 
       {running.length > 0 && (
         <section className="mb-10 grid gap-3" aria-label="In production">

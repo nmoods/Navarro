@@ -1,8 +1,9 @@
 import { Loader2, X } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { JOB_STAGES, STAGE_LABEL, isTerminal } from "@/lib/format";
+import { JOB_STAGES, STAGE_LABEL, isTerminal, timecode } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { jobsApi } from "@/services/endpoints";
 import { errorMessage } from "@/services/http";
@@ -17,7 +18,21 @@ const RELEVANT: Record<Job["job_type"], readonly string[]> = {
   series_production: ["finalizing"],
 };
 
-/** Stage strip + progress beam for a running job, with cancel. */
+/** Seconds since the job started, ticking while it runs. */
+function useElapsed(job: Job): number | null {
+  const [now, setNow] = useState(() => Date.now());
+  const running = !isTerminal(job.status);
+  useEffect(() => {
+    if (!running) return;
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [running]);
+  if (!job.started_at) return null;
+  const end = job.finished_at ? new Date(job.finished_at).getTime() : now;
+  return Math.max(0, (end - new Date(job.started_at).getTime()) / 1000);
+}
+
+/** Stage strip + progress beam for a running job, with elapsed time and cancel. */
 export function JobProgress({ job, compact = false }: { job: Job; compact?: boolean }) {
   const cancel = useMutation({
     mutationFn: () => jobsApi.cancel(job.id),
@@ -27,6 +42,7 @@ export function JobProgress({ job, compact = false }: { job: Job; compact?: bool
   const stages = RELEVANT[job.job_type] ?? JOB_STAGES;
   const current = stages.indexOf(job.status);
   const running = !isTerminal(job.status);
+  const elapsed = useElapsed(job);
 
   return (
     <div className={cn("rounded-lg border border-line bg-surface", compact ? "p-3" : "p-4")} aria-live="polite">
@@ -36,6 +52,7 @@ export function JobProgress({ job, compact = false }: { job: Job; compact?: bool
           <p className="truncate text-sm text-text">{job.stage_message}</p>
         </div>
         <div className="flex items-center gap-2">
+          {elapsed !== null && <span className="timecode text-xs text-faint" title="Elapsed time">{timecode(elapsed, false)}</span>}
           <span className="timecode text-sm">{Math.round(job.progress)}%</span>
           {running && (
             <Button size="sm" variant="ghost" onClick={() => cancel.mutate()} disabled={cancel.isPending} aria-label="Cancel job">

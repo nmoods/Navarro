@@ -2,7 +2,13 @@
 
 from __future__ import annotations
 
-from app.application.direction import extract_events, extract_places, extract_stats, kinetic_lines, polish_storyboard
+from app.application.direction import (
+    extract_events,
+    extract_places,
+    extract_stats,
+    kinetic_lines,
+    polish_storyboard,
+)
 from app.application.narrative import analyse, split_into_scenes
 from app.application.ports import TimedWord
 from app.domain.story import SceneDraft, StoryboardDraft

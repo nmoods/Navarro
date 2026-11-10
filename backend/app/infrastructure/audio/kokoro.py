@@ -11,7 +11,7 @@ from pathlib import Path
 from app.application.ports import ProviderHealth, SpeechResult, Voice
 from app.core.errors import ProviderError, ProviderUnavailableError
 
-logger = logging.getLogger("reelforge.kokoro")
+logger = logging.getLogger("narravo.kokoro")
 
 _ACCENTS = {"a": ("en", "American"), "b": ("en", "British"), "e": ("es", "Spanish"), "f": ("fr", "French"),
             "h": ("hi", "Hindi"), "i": ("it", "Italian"), "j": ("ja", "Japanese"), "p": ("pt", "Brazilian Portuguese"),
